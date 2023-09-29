@@ -17,22 +17,18 @@ To use the DatatableCard component in your Vue.js application, you can import it
 ```vue
 <template>
   <div>
-    <DatatableCard
-      :cardTitle="cardTitle"
+    <datatable-card
+      :card-title="cardTitle"
       :columns="columns"
       :url="dataUrl"
-      :selectableRows="true"
-      :order="defaultOrder"
-      :advancedSearch="true"
-      :loadDataOnInit="true"
-      @row-click="handleRowClick"
     >
-    </DatatableCard>
+    </datatable-card>
   </div>
 </template>
 
 <script>
 import DatatableCard from '@sulzanoks/vue-datatable';
+import '@sulzanoks/vue-datatable/dist/style.css';
 
 export default {
   components: {
@@ -46,13 +42,7 @@ export default {
         // Example: { data: 'id', name: 'ID', sortable: true, searchable: true }
       ],
       dataUrl: '/api/data', // Replace with your data endpoint URL
-      defaultOrder: [{ column: 0, dir: 'asc' }],
     };
-  },
-  methods: {
-    handleRowClick(row) {
-      // Handle row click event here
-    },
   },
 };
 </script>
@@ -74,7 +64,7 @@ The DatatableCard component accepts the following props:
     - `resourceIds` (Array): An array of resource IDs to use in generating the link. Replace with actual resource IDs.
 - `url` (String): The URL for fetching datatable data.
 - `selectableRows` (Boolean): Set to `true` to enable row selection. For now only works if you have a, `id` column in your data set. 
-- `order` (Array): The initial column sorting order.
+- `order` (Array): The initial column sorting order. example: `[{ column: 0, dir: 'asc' }]`
 - `advancedSearch` (Boolean): Set to `true` to enable advanced search, which generates an individual search input for each searchable column.
 - `loadDataOnInit` (Boolean): Set to `true` to load data when the component is initialized.
 - `cardIconStyle` (String, optional, default: 'card-header-primary'. There are no other options): The CSS class to apply to the card's header for icon styling.
