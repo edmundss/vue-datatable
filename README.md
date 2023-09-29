@@ -77,6 +77,10 @@ The DatatableCard component accepts the following props:
 - `order` (Array): The initial column sorting order.
 - `advancedSearch` (Boolean): Set to `true` to enable advanced search, which generates an individual search input for each searchable column.
 - `loadDataOnInit` (Boolean): Set to `true` to load data when the component is initialized.
+- `cardIconStyle` (String, optional, default: 'card-header-primary'. There are no other options): The CSS class to apply to the card's header for icon styling.
+- `cardIcon` (String, optional, default: null): The name of an icon from [Google Icons](https://fonts.google.com/icons) to display in the card's header. Provide the icon name without any additional markup, such as `<i>` tags. For example, if you want to use the "account_circle" icon, set this prop to `'account_circle'`. If not specified, no icon will be displayed in the card's header.
+- `cardClasses` (String, optional, default: null): Additional CSS classes to apply to the card.
+- `createLink` (String, optional, default: null): A link or URL to navigate to when clicking a "Create" button or link within the card.
 
 ## Internal Methods
 
