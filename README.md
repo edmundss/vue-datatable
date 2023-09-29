@@ -73,7 +73,7 @@ The DatatableCard component accepts the following props:
     - `name` (String): The name of the Vue.js route to navigate to when clicking the link.
     - `resourceIds` (Array): An array of resource IDs to use in generating the link. Replace with actual resource IDs.
 - `url` (String): The URL for fetching datatable data.
-- `selectableRows` (Boolean): Set to `true` to enable row selection.
+- `selectableRows` (Boolean): Set to `true` to enable row selection. For now only works if you have a, `id` column in your data set. 
 - `order` (Array): The initial column sorting order.
 - `advancedSearch` (Boolean): Set to `true` to enable advanced search.
 - `loadDataOnInit` (Boolean): Set to `true` to load data when the component is initialized.
@@ -82,22 +82,21 @@ The DatatableCard component accepts the following props:
 
 These methods are meant to be used by component internally, but maybe you can find use for them
 
-- `alert(message)`: Display an alert with the given message.
-- `toggleSearch()`: Toggle the advanced search bar.
+- `toggleSearch()`: Toggle the search input.
 - `clearSearch()`: Clear the search bar and reload data.
-- `setAdvancedSearchFilters()`: Set advanced search filters and reload data.
+- `setAdvancedSearchFilters()`: Set advanced search filters based in input element values and reload data.
 - `loadData()`: Load datatable data.
 - `initColumnSettings()`: Initialize column settings.
 - `setPageLength(length)`: Set the number of rows per page and reload data.
 - `setPage(page)`: Set the current page and reload data.
-- `setSearchTerm()`: Set the search term and reload data.
+- `setSearchTerm()`: Set the full text search term for basic search on all columns and reload data.
 - `setSorting(index)`: Set the sorting order for a column and reload data.
 - `generateLink(linkParams, row)`: Generate a link based on parameters and row data.
 - `selectAllRows()`: Select or deselect all rows.
 - `clearSelectedRows()`: Clear the selected rows.
 
 ## Methods
-
+- `getSelectedRows`: Returns array of selected rows
 - `filterColumns(params)`: Filter columns based on parameters and reload data.
 ```javascript
     this.$refs.myDataTable.filterColumns([

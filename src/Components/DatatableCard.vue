@@ -299,9 +299,6 @@
             },
         },
         methods:{
-            alert(message){
-                alert(message);
-            },
             toggleSearch(){
                 if(!this.advancedSearch) {
                     this.searchBarOpen = true;
@@ -454,7 +451,10 @@
                 });
 
                 this.loadData();
-            }
+            },
+            getSelectedRows(){
+                return this.selectedRows;
+            },
         },
         mounted(){
             this.initColumnSettings();
