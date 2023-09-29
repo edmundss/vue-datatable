@@ -100,28 +100,18 @@ These methods are meant to be used by component internally, but maybe you can fi
 
 - `filterColumns(params)`: Filter columns based on parameters and reload data.
 ```javascript
-  filterColumns([
-    {
-      name: 'serial_number',
-      value: this.uniqueId,
-    },
-    {
-      name: 'given_name',
-      value: this.firstName,
-    },
-    {
-      name: 'family_name',
-      value: this.lastName,
-    },
-    {
-      name: 'phone_number',
-      value: this.phone,
-    },
-    {
-      name: 'email',
-      value: this.email,
-    },
-  ])
+    this.$refs.myDataTable.filterColumns([
+        {
+            name: 'serial_number',
+            value: this.uniqueId,
+        },
+        {
+            name: 'product_name',
+            value: this.productName,
+        }
+    ]);
+```
+
 ## Compatibility
 
 This component is designed to work with Laravel's `yajra/laravel-datatables-oracle`. It may work with other packages that use a similar input/output structure, but it has not been tested extensively with other packages.
