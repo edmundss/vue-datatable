@@ -75,7 +75,7 @@ The DatatableCard component accepts the following props:
 - `url` (String): The URL for fetching datatable data.
 - `selectableRows` (Boolean): Set to `true` to enable row selection. For now only works if you have a, `id` column in your data set. 
 - `order` (Array): The initial column sorting order.
-- `advancedSearch` (Boolean): Set to `true` to enable advanced search.
+- `advancedSearch` (Boolean): Set to `true` to enable advanced search, which generates an individual search input for each searchable column.
 - `loadDataOnInit` (Boolean): Set to `true` to load data when the component is initialized.
 
 ## Internal Methods
@@ -96,7 +96,7 @@ These methods are meant to be used by component internally, but maybe you can fi
 - `clearSelectedRows()`: Clear the selected rows.
 
 ## Methods
-- `getSelectedRows`: Returns array of selected rows
+- `getSelectedRows()`: Returns array of selected rows
 - `filterColumns(params)`: Filter columns based on parameters and reload data.
 ```javascript
     this.$refs.myDataTable.filterColumns([
@@ -113,7 +113,7 @@ These methods are meant to be used by component internally, but maybe you can fi
 
 ## Compatibility
 
-This component is designed to work with Laravel's `yajra/laravel-datatables-oracle`. It may work with other packages that use a similar input/output structure, but it has not been tested extensively with other packages.
+This component is designed to work with Laravel's [`yajra/laravel-datatables-oracle`](https://yajrabox.com/docs/laravel-datatables). It may work with other packages that use a similar input/output structure, but it has not been tested extensively with other packages.
 
 Please make sure that your Laravel backend and the API endpoints are configured to work with this component.
 
