@@ -1,0 +1,33 @@
+{
+  "name": "@sulzanoks/vue-datatable",
+  "version": "0.0.8",
+  "main": "./dist/datatable-card.umd.js",
+  "module": "./dist/datatable-card.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/datatable-card.es.js",
+      "require": "./dist/datatable-card.umd.js"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@inertiajs/vue3": "^1.0.11",
+    "axios": "^1.5.0",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "sass": "^1.67.0",
+    "vite": "^4.4.5"
+  }
+}
