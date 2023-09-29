@@ -64,6 +64,14 @@ The DatatableCard component accepts the following props:
 
 - `cardTitle` (String): The title for the datatable card.
 - `columns` (Array): An array of column objects defining the datatable columns.
+  - `data` (String): The key to access the data for this column in the API response.
+  - `displayName` (String): The display name or label for this column.
+  - `name` (String): The unique name or identifier for this column.
+  - `searchable` (Boolean, optional, default: true): Set to `false` to disable searching for this column.
+  - `sortable` (Boolean, optional, default: true): Set to `false` to disable sorting for this column.
+  - `linkParams` (Object, optional): Defines link parameters for generating Vue.js style links.
+    - `name` (String): The name of the Vue.js route to navigate to when clicking the link.
+    - `resourceIds` (Array): An array of resource IDs to use in generating the link. Replace with actual resource IDs.
 - `url` (String): The URL for fetching datatable data.
 - `selectableRows` (Boolean): Set to `true` to enable row selection.
 - `order` (Array): The initial column sorting order.
