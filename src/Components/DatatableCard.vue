@@ -327,6 +327,12 @@
                 this.columnSettings.draw++;
                 this.clearSelectedRows();
                 axios.get(this.url, {params: this.columnSettings}).then(response => {
+                    if (response.data.error) {
+                        this.cardError = response.data.error;
+                        return;
+                    }
+
+                    this.cardError = null;
                     this.rows = response.data.data;
                     this.recordsTotal = response.data.recordsTotal;
                     this.recordsFiltered = response.data.recordsFiltered;
