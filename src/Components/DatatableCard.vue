@@ -328,7 +328,8 @@
                 this.clearSelectedRows();
                 axios.get(this.url, {params: this.columnSettings}).then(response => {
                     if (response.data.error) {
-                        this.cardError = response.data.error;
+                        this.cardError = 'error loading data. see console for details';
+                        console.error(response.data.error);
                         return;
                     }
 
