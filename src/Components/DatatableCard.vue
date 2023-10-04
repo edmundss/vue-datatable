@@ -59,7 +59,7 @@
                         >
                             <input 
                                 :name="column.name" 
-                                class="form-control" 
+                                class="form-control advanced-filter-input" 
                                 :placeholder="column.displayName" 
                                 autocomplete="off"
                             />
@@ -76,14 +76,18 @@
                                 <th v-if="selectableRows">
                                     <input type="checkbox" @click="selectAllRows" ref="selectAllRows">
                                 </th>
-                                <th
+                                <template
                                     v-for="(column, index) in columns"
                                     :key="index"
-                                    :class="[columnSortingClasses[index], column.sortable !== false ? 'sorting' : '']"
-                                    @click="setSorting(index)"
-                                >
-                                    {{column.displayName}}
-                                </th>
+                                    >
+                                    <th
+                                        v-if="column.visible !== false"
+                                        :class="[columnSortingClasses[index], column.sortable !== false ? 'sorting' : '']"
+                                        @click="setSorting(index)"
+                                    >
+                                        {{column.displayName}}
+                                    </th>
+                                </template>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,12 +95,14 @@
                                 <td v-if="selectableRows">
                                     <input type="checkbox" :value="row.id" v-model="selectedRows">
                                 </td>
-                                <td v-for="(column, index) in columns" :key="index">
-                                    <Link v-if="column.linkParams" :href="generateLink(column.linkParams, row)">
-                                        {{row[column.data]}}
-                                    </Link>
-                                    <span v-else>{{row[column.data]}}</span>
-                                </td>
+                                <template v-for="(column, index) in columns" :key="index">
+                                    <td v-if="column.visible !== false">
+                                        <Link v-if="column.linkParams" :href="generateLink(column.linkParams, row)">
+                                            {{row[column.data]}}
+                                        </Link>
+                                        <span v-else>{{row[column.data]}}</span>
+                                    </td>
+                                </template>
                             </tr>
                         </tbody>
                     </table>
@@ -214,6 +220,13 @@
                 required: false,
                 default: true,
             },
+            requestQueryParams: {
+                type: Object,
+                required: false,
+                default: () => {
+                    return {};
+                }
+            },
         },
         data() {
             return {
@@ -299,6 +312,28 @@
             },
         },
         methods:{
+            refresh(){
+                this.initColumnSettings();
+                this.searchBarOpen = false;
+                if (this.loadDataOnInit) {
+                    this.loadData();
+                } else {
+                    this.rows = [];
+                }
+
+                // clear selected rows
+                this.selectedRows = [];
+
+                // clear search bar
+                if (!this.advancedSearch) {
+                    this.$el.querySelector('.filter-input').value = '';
+                }
+                // clear advanced search inputs
+                this.$el.querySelectorAll('.advanced-filter-input').forEach((input) => {
+                    input.value = '';
+                });
+            },
+
             toggleSearch(){
                 if(!this.advancedSearch) {
                     this.searchBarOpen = true;
@@ -326,7 +361,11 @@
             loadData(){
                 this.columnSettings.draw++;
                 this.clearSelectedRows();
-                axios.get(this.url, {params: this.columnSettings}).then(response => {
+                const params = {
+                    ...this.requestQueryParams,
+                    ...this.columnSettings,
+                };
+                axios.get(this.url, {params: params}).then(response => {
                     if (response.data.error) {
                         this.cardError = 'error loading data. see console for details';
                         console.error(response.data.error);
@@ -353,6 +392,7 @@
                             // if searchable is not set, default to true
                             searchable: column.searchable === undefined ? true : column.searchable,
                             sortable: column.sortable === undefined ? true : column.sortable,
+                            visible: column.visible === undefined ? true : column.visible,
                             search: {
                                 value: '',
                                 regex: false,

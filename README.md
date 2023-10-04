@@ -59,6 +59,7 @@ The DatatableCard component accepts the following props:
   - `name` (String): The unique name or identifier for this column.
   - `searchable` (Boolean, optional, default: true): Set to `false` to disable searching for this column.
   - `sortable` (Boolean, optional, default: true): Set to `false` to disable sorting for this column.
+  - `visible` (Boolean, optional, default: true): Set to `false` to remove column from table.
   - `linkParams` (Object, optional): Defines link parameters for generating Vue.js style links.
     - `name` (String): The name of the Vue.js route to navigate to when clicking the link.
     - `resourceIds` (Array): An array of resource IDs to use in generating the link. Replace with actual resource IDs.
@@ -71,6 +72,7 @@ The DatatableCard component accepts the following props:
 - `cardIcon` (String, optional, default: null): The name of an icon from [Google Icons](https://fonts.google.com/icons) to display in the card's header. Provide the icon name without any additional markup, such as `<i>` tags. For example, if you want to use the "account_circle" icon, set this prop to `'account_circle'`. If not specified, no icon will be displayed in the card's header.
 - `cardClasses` (String, optional, default: null): Additional CSS classes to apply to the card.
 - `createLink` (String, optional, default: null): A link or URL to navigate to when clicking a "Create" button or link within the card.
+- `requestQueryParams` (Object, optional): additional request query parameters to include when loading data from server.
 
 ## Internal Methods
 
@@ -104,6 +106,7 @@ These methods are meant to be used by component internally, but maybe you can fi
         }
     ]);
 ```
+- `refresh()`: Clears all sorting and filters, reloads or clears data based on `loadDataOnInit` prop.
 
 ## Compatibility
 
