@@ -1,6 +1,6 @@
 {
   "name": "@sulzanoks/vue-datatable",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "private": false,
   "main": "./dist/datatable-card.umd.js",
   "module": "./dist/datatable-card.es.js",

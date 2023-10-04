@@ -63,6 +63,7 @@ The DatatableCard component accepts the following props:
   - `linkParams` (Object, optional): Defines link parameters for generating Vue.js style links.
     - `name` (String): The name of the Vue.js route to navigate to when clicking the link.
     - `resourceIds` (Array): An array of resource IDs to use in generating the link. Replace with actual resource IDs.
+    - `query` (Object, optional): object of attributes to include in link query params
 - `url` (String): The URL for fetching datatable data.
 - `selectableRows` (Boolean): Set to `true` to enable row selection. For now only works if you have a, `id` column in your data set. 
 - `order` (Array): The initial column sorting order. example: `[{ column: 0, dir: 'asc' }]`

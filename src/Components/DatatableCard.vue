@@ -458,7 +458,13 @@
                 linkParams.resourceIds.forEach((resourceId) => {
                     resourceIds.push(row[resourceId]);
                 });
-                return route(linkParams.name, resourceIds);
+
+                let link = route(linkParams.name, resourceIds);
+
+                if (linkParams.query) {
+                    link += '?' + new URLSearchParams(linkParams.query).toString();
+                }
+                return link;
             },
             selectAllRows(){
                 if(this.selectedRows.length == this.rows.length){
