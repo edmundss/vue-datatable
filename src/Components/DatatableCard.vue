@@ -97,10 +97,9 @@
                                 </td>
                                 <template v-for="(column, index) in columns" :key="index">
                                     <td v-if="column.visible !== false">
-                                        <Link v-if="column.linkParams" :href="generateLink(column.linkParams, row)">
-                                            {{row[column.data]}}
+                                        <Link v-if="column.linkParams" :href="generateLink(column.linkParams, row)" v-html="row[column.data]">
                                         </Link>
-                                        <span v-else>{{row[column.data]}}</span>
+                                        <span v-else v-html="row[column.data]"></span>
                                     </td>
                                 </template>
                             </tr>
