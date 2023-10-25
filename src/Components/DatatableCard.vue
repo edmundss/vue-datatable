@@ -17,11 +17,12 @@
                 </div>
             </div>
             <ul class="card-actions icons right-top">
-                    <li v-if="createLink">
-                        <Link  :href="createLink" data-tippy-content="Create new">
-                            <i class="material-icons">add</i>
-                        </Link>
-                    </li>
+                <slot name="actions"></slot>
+                <li v-if="createLink">
+                    <Link  :href="createLink" data-tippy-content="Create new">
+                        <i class="material-icons">add</i>
+                    </Link>
+                </li>
                 <li>
                     <a href="javascript:void(0)" data-tippy-content="Meklēt" @click="toggleSearch">
                         <i class="material-icons">search</i>
@@ -49,6 +50,7 @@
             </ul>
         </header>
         <div class="card-body">
+            <slot name="default"></slot>
             <div v-if="advancedSearch" class="toolbar" :class="{open:searchBarOpen}">
                 <form @submit.prevent="setAdvancedSearchFilters">
                     <template  v-for="(column, index) in columns">
