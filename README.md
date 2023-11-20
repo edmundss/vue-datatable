@@ -74,6 +74,11 @@ The DatatableCard component accepts the following props:
 - `cardClasses` (String, optional, default: null): Additional CSS classes to apply to the card.
 - `createLink` (String, optional, default: null): A link or URL to navigate to when clicking a "Create" button or link within the card.
 - `requestQueryParams` (Object, optional): additional request query parameters to include when loading data from server.
+- `actions` (Array, optional): Array of action objects defining action buttons for each row.
+  - `emit` (String, required): name of event to emit upon click
+  - `icon` (String, optional): The name of an icon from [Google Icons](https://fonts.google.com/icons) to display inside button.
+  - `label` (String, optional): Text to display inside button.
+  - `class` (String, optional): CSS class to apply to button.
 
 ## Internal Methods
 

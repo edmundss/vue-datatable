@@ -50,7 +50,7 @@
             </ul>
         </header>
         <div class="card-body">
-            <slot name="default"></slot>
+            <slot></slot>
             <div v-if="advancedSearch" class="toolbar" :class="{open:searchBarOpen}">
                 <form @submit.prevent="setAdvancedSearchFilters">
                     <template  v-for="(column, index) in columns">
