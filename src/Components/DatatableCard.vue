@@ -1,16 +1,18 @@
 <template>
     <div class="card" :class="cardClasses">
-        <header class="card-header" :class="{'card-header-primary':!cardError, 'card-header-danger':cardError && cardIcon, 'card-header-icon':cardIcon}">
+        <header class="card-header"
+            :class="{ 'card-header-primary': !cardError && cardIcon, 'card-header-danger': cardError && cardIcon, 'card-header-icon': cardIcon }">
             <div v-if="cardIcon" class="card-icon">
-                <i v-if="!cardError" class="material-icons">{{cardIcon}}</i>
+                <i v-if="!cardError" class="material-icons">{{ cardIcon }}</i>
                 <i v-else class="material-icons">dangerous</i>
             </div>
-            <h4 v-if="cardTitle && !cardError" class="card-title">{{cardTitle}}</h4>
-            <h4 v-if="cardError" class="card-title text-danger">{{cardError}}</h4>
-            <div v-if="!advancedSearch" class="card-search" :class="{open:searchBarOpen}">
+            <h4 v-if="cardTitle && !cardError" class="card-title">{{ cardTitle }}</h4>
+            <h4 v-if="cardError" class="card-title text-danger">{{ cardError }}</h4>
+            <div v-if="!advancedSearch" class="card-search" :class="{ open: searchBarOpen }">
                 <div class="form-group label-floating is-empty">
                     <i class="material-icons search-icon-left">search</i>
-                    <input type="text" class="form-control filter-input" placeholder="Search..." autocomplete="off" @keyup="setSearchTerm">
+                    <input type="text" class="form-control filter-input" placeholder="Search..." autocomplete="off"
+                        @keyup="setSearchTerm">
                     <a href="javascript:void(0)" class="close-search" @click="clearSearch" data-tippy-content="Close">
                         <i class="material-icons">close</i>
                     </a>
@@ -19,8 +21,8 @@
             <ul class="card-actions icons right-top">
                 <slot name="actions"></slot>
                 <li v-if="createLink">
-                    <Link  :href="createLink" data-tippy-content="Create new">
-                        <i class="material-icons">add</i>
+                    <Link :href="createLink" data-tippy-content="Create new">
+                    <i class="material-icons">add</i>
                     </Link>
                 </li>
                 <li>
@@ -50,21 +52,13 @@
             </ul>
         </header>
         <div class="card-body">
-            <slot></slot>
-            <div v-if="advancedSearch" class="toolbar" :class="{open:searchBarOpen}">
+            <slot name="default"></slot>
+            <div v-if="advancedSearch" class="toolbar" :class="{ open: searchBarOpen }">
                 <form @submit.prevent="setAdvancedSearchFilters">
-                    <template  v-for="(column, index) in columns">
-                        <span
-                            v-if="column.searchable !== false"
-                            class="bmd-form-group"
-                            :key="index"
-                        >
-                            <input 
-                                :name="column.name" 
-                                class="form-control advanced-filter-input" 
-                                :placeholder="column.displayName" 
-                                autocomplete="off"
-                            />
+                    <template v-for="(column, index) in columns">
+                        <span v-if="column.searchable !== false" class="bmd-form-group" :key="index">
+                            <input :name="column.name" class="form-control advanced-filter-input"
+                                :placeholder="column.displayName" autocomplete="off" />
                         </span>
                     </template>
                     <button type="submit" class="btn btn-primary">Meklēt</button>
@@ -72,78 +66,72 @@
             </div>
             <div class="table-responsive">
                 <div class="dataTables_wrapper no-footer">
-                    <table class="table data-table dataTable no-footer">
+                    <table class="table data-table dataTable no-footer" :class="{'table-hover' : clickableRows}">
                         <thead>
                             <tr>
                                 <th v-if="selectableRows">
                                     <input type="checkbox" @click="selectAllRows" ref="selectAllRows">
                                 </th>
-                                <template
-                                    v-for="(column, index) in columns"
-                                    :key="index"
-                                    >
-                                    <th
-                                        v-if="column.visible !== false"
+                                <template v-for="(column, index) in columns" :key="index">
+                                    <th v-if="column.visible !== false"
                                         :class="[columnSortingClasses[index], column.sortable !== false ? 'sorting' : '']"
-                                        @click="setSorting(index)"
-                                    >
-                                        {{column.displayName}}
+                                        @click="setSorting(index)">
+                                        {{ column.displayName }}
                                     </th>
                                 </template>
+                                <th v-if="actions" class="w-25">Darbības</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(row, index) in rows" :key="index">
+                            <tr
+                                v-for="(row, index) in rows" 
+                                :key="index"
+                                @click="clickableRows ? $emit('row-click', row) : null"
+                            >
                                 <td v-if="selectableRows">
                                     <input type="checkbox" :value="row.id" v-model="selectedRows">
                                 </td>
                                 <template v-for="(column, index) in columns" :key="index">
                                     <td v-if="column.visible !== false">
-                                        <Link v-if="column.linkParams" :href="generateLink(column.linkParams, row)" v-html="row[column.data]">
+                                        <Link v-if="column.linkParams" :href="generateLink(column.linkParams, row)"
+                                            v-html="row[column.data]">
                                         </Link>
                                         <span v-else v-html="row[column.data]"></span>
                                     </td>
                                 </template>
+                                <td v-if="actions">
+                                    <button v-for="(action, index) in actions" :key="index" class="btn btn-sm"
+                                        :class="action.class" @click="handleEmit(action.emit, row)">
+                                        <i v-if="action.icon" class="material-icons">{{ action.icon }}</i> {{
+                                            action.label
+                                        }}
+                                    </button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
 
                     <div class="dataTables_info">
-                        Rāda {{firstRecord}}. līdz {{lastRecord}}. no {{recordsFiltered}} ierakstiem
+                        Rāda {{ firstRecord }}. līdz {{ lastRecord }}. no {{ recordsFiltered }} ierakstiem
                         <span v-if="recordsFiltered != recordsTotal">
                             (kopā {{ recordsTotal }} ierkasti)
                         </span>
                     </div>
-                    <div class="dataTables_paginate paging_simple_numbers user-select-none" id="document-index-table_paginate">
-                        <a
-                            class="paginate_button first user-select-none"
-                            :class="{disabled:columnSettings.start == 0}"
-                            @click="setPage(1)"
-                        >Pirmā</a>
-                        <a
-                            class="paginate_button previous"
-                            :class="{disabled:columnSettings.start == 0}"
-                            @click="setPage(currentPage - 1)"
-                        >Iepriekšējā</a>
+                    <div class="dataTables_paginate paging_simple_numbers user-select-none"
+                        id="document-index-table_paginate">
+                        <a class="paginate_button first user-select-none" :class="{ disabled: columnSettings.start == 0 }"
+                            @click="setPage(1)">Pirmā</a>
+                        <a class="paginate_button previous" :class="{ disabled: columnSettings.start == 0 }"
+                            @click="setPage(currentPage - 1)">Iepriekšējā</a>
 
                         <span>
-                            <a
-                                v-for="(page, index) in pages"
-                                class="paginate_button"
-                                :class="{current: page == currentPage}"
-                                @click="setPage(page)"
-                            >{{ page }}</a>
+                            <a v-for="(page, index) in pages" class="paginate_button"
+                                :class="{ current: page == currentPage }" @click="setPage(page)">{{ page }}</a>
                         </span>
-                        <a
-                            class="paginate_button next"
-                            :class="{disabled:columnSettings.start >= lastPageStart}"
-                            @click="setPage(currentPage + 1)"
-                        >Nākamā</a>
-                        <a
-                            class="paginate_button last"
-                            :class="{disabled:columnSettings.start >= lastPageStart}"
-                            @click="setPage(pageCount)"
-                        >Pēdējā</a>
+                        <a class="paginate_button next" :class="{ disabled: columnSettings.start >= lastPageStart }"
+                            @click="setPage(currentPage + 1)">Nākamā</a>
+                        <a class="paginate_button last" :class="{ disabled: columnSettings.start >= lastPageStart }"
+                            @click="setPage(pageCount)">Pēdējā</a>
                     </div>
 
                 </div>
@@ -153,371 +141,383 @@
 </template>
 
 <script>
-    import axios from 'axios';
-    import { Link } from '@inertiajs/vue3';
-    import '../Sass/Style.scss';
-    
-    export default {
-        name: "DatatableCard",
-        components: {
-            Link,
+import axios from 'axios';
+import { Link } from '@inertiajs/vue3';
+
+export default {
+    name: "DatatableCard",
+    components: {
+        Link,
+    },
+    props: {
+        cardTitle: {
+            type: String,
+            required: false,
+            default: null,
         },
-        props: {
-            cardTitle: {
-                type: String,
-                required: false,
-                default: null,
-            },
-            cardIconStyle: {
-                type: String,
-                required: false,
-                default: 'card-header-primary',
-            },
-            cardIcon: {
-                type: String,
-                required: false,
-                default: null,
-            },
-            cardClasses: {
-                type: String,
-                required: false,
-                default: null,
-            },
-            createLink: {
-                type: String,
-                required: false,
-                default: null,
-            },
-            columns: {
-                type: Array,
-                required: true,
-            },
-            url: {
-                type: String,
-                required: true,
-            },
-            selectableRows: {
-                type: Boolean,
-                required: false,
-                default: false,
-            },
-            order: {
-                type: Array,
-                required: false,
-                default:  [
-                    {
-                        column: 0,
-                        dir: 'asc',
-                    }
-                ],
-            },
-            advancedSearch: {
-                type: Boolean,
-                required: false,
-                default: false,
-            },
-            loadDataOnInit: {
-                type: Boolean,
-                required: false,
-                default: true,
-            },
-            requestQueryParams: {
-                type: Object,
-                required: false,
-                default: () => {
-                    return {};
+        cardIconStyle: {
+            type: String,
+            required: false,
+            default: 'card-header-primary',
+        },
+        cardIcon: {
+            type: String,
+            required: false,
+            default: null,
+        },
+        cardClasses: {
+            type: String,
+            required: false,
+            default: null,
+        },
+        createLink: {
+            type: String,
+            required: false,
+            default: null,
+        },
+        columns: {
+            type: Array,
+            required: true,
+        },
+        url: {
+            type: String,
+            required: true,
+        },
+        selectableRows: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        order: {
+            type: Array,
+            required: false,
+            default: [
+                {
+                    column: 0,
+                    dir: 'asc',
                 }
-            },
+            ],
         },
-        data() {
-            return {
-                searchBarOpen: false,
-                rows: [],
-                columnSettings: {},
-                searchTerm: '',
-                recordsTotal: 0,
-                recordsFiltered: 0,
-                selectedRows: [],
-                cardError: null,
+        advancedSearch: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        loadDataOnInit: {
+            type: Boolean,
+            required: false,
+            default: true,
+        },
+        requestQueryParams: {
+            type: Object,
+            required: false,
+            default: () => {
+                return {};
             }
         },
-        watch: {
-            selectedRows: function (val, oldVal) {
-                if (!this.selectableRows) {
+        actions: {
+            type: Array,
+            required: false,
+        },
+        clickableRows: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+    },
+    emits: ['row-click'],
+    data() {
+        return {
+            searchBarOpen: false,
+            rows: [],
+            columnSettings: {},
+            searchTerm: '',
+            recordsTotal: 0,
+            recordsFiltered: 0,
+            selectedRows: [],
+            cardError: null,
+        }
+    },
+    watch: {
+        selectedRows: function (val, oldVal) {
+            if (!this.selectableRows) {
+                return;
+            }
+
+            if (val.length === this.rows.length && val.length > 0) {
+                this.$refs.selectAllRows.indeterminate = false;
+                this.$refs.selectAllRows.checked = true;
+            } else if (val.length === 0) {
+                this.$refs.selectAllRows.indeterminate = false;
+                this.$refs.selectAllRows.checked = false;
+            } else {
+                this.$refs.selectAllRows.indeterminate = true;
+            }
+        }
+    },
+    computed: {
+        firstRecord() {
+            return this.columnSettings.start + 1;
+        },
+        lastRecord() {
+            return this.columnSettings.start + this.rows.length;
+        },
+        currentPage() {
+            return Math.ceil(this.columnSettings.start / this.columnSettings.length) + 1;
+        },
+        pageCount() {
+            return Math.ceil(this.recordsFiltered / this.columnSettings.length);
+        },
+        lastPageStart() {
+            return (this.pageCount - 1) * this.columnSettings.length;
+        },
+        columnSortingClasses() {
+            let classes = [];
+            if (!this.columnSettings.order) {
+                return classes;
+            }
+
+            for (let i = 0; i < this.columns.length; i++) {
+                let sortDirection = '';
+                for (let j = 0; j < this.columnSettings.order.length; j++) {
+                    if (this.columnSettings.order[j].column == i) {
+                        sortDirection = this.columnSettings.order[j].dir == 'asc' ? 'sorting_asc' : 'sorting_desc';
+                    }
+                }
+                classes.push(sortDirection);
+            }
+            return classes;
+        },
+        pages() {
+            let pages = [];
+            let start = this.currentPage - 2;
+            let end = this.currentPage + 2;
+            if (start < 1) {
+                start = 1;
+                end = 5;
+            }
+            if (end > this.pageCount) {
+                start = this.pageCount - 4;
+                end = this.pageCount;
+            }
+            if (start < 1) {
+                start = 1;
+            }
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+            return pages;
+        },
+    },
+    methods: {
+        handleEmit(emit, row) {
+            this.$emit(emit, row);
+        },
+        refresh() {
+            this.initColumnSettings();
+            this.searchBarOpen = false;
+            if (this.loadDataOnInit) {
+                this.loadData();
+            } else {
+                this.rows = [];
+            }
+
+            // clear selected rows
+            this.selectedRows = [];
+
+            // clear search bar
+            if (!this.advancedSearch) {
+                this.$el.querySelector('.filter-input').value = '';
+            }
+            // clear advanced search inputs
+            this.$el.querySelectorAll('.advanced-filter-input').forEach((input) => {
+                input.value = '';
+            });
+        },
+
+        toggleSearch() {
+            if (!this.advancedSearch) {
+                this.searchBarOpen = true;
+            }
+
+            if (this.advancedSearch) {
+                this.searchBarOpen = !this.searchBarOpen;
+            }
+        },
+        clearSearch() {
+            this.searchBarOpen = false;
+            this.$el.querySelector('.filter-input').value = '';
+            this.columnSettings.search.value = '';
+
+            this.loadData();
+        },
+        setAdvancedSearchFilters() {
+            this.columnSettings.columns.forEach((column, index) => {
+                if (column.searchable) {
+                    column.search.value = this.$el.querySelector(`input[name="${column.name}"]`).value;
+                }
+            });
+            this.loadData();
+        },
+        loadData() {
+            this.columnSettings.draw++;
+            this.clearSelectedRows();
+            const params = {
+                ...this.requestQueryParams,
+                ...this.columnSettings,
+            };
+            axios.get(this.url, { params: params }).then(response => {
+                if (response.data.error) {
+                    this.cardError = 'error loading data. see console for details';
+                    console.error(response.data.error);
                     return;
                 }
 
-                if(val.length === this.rows.length && val.length > 0){
-                    this.$refs.selectAllRows.indeterminate = false;
-                    this.$refs.selectAllRows.checked = true;
-                }else if(val.length === 0){
-                    this.$refs.selectAllRows.indeterminate = false;
-                    this.$refs.selectAllRows.checked = false;
-                }else{
-                    this.$refs.selectAllRows.indeterminate = true;
-                }
-            }
-        },
-        computed: {
-            firstRecord(){
-                return this.columnSettings.start + 1;
-            },
-            lastRecord(){
-                return this.columnSettings.start + this.rows.length;
-            },
-            currentPage(){
-                return Math.ceil(this.columnSettings.start / this.columnSettings.length) + 1;
-            },
-            pageCount(){
-                return Math.ceil(this.recordsFiltered / this.columnSettings.length);
-            },
-            lastPageStart(){
-                return (this.pageCount - 1) * this.columnSettings.length;
-            },
-            columnSortingClasses(){
-                let classes = [];
-                if(!this.columnSettings.order){
-                    return classes;
-                }
-
-                for(let i = 0; i < this.columns.length; i++){
-                    let sortDirection = '';
-                    for(let j = 0; j < this.columnSettings.order.length; j++){
-                        if(this.columnSettings.order[j].column == i){
-                            sortDirection = this.columnSettings.order[j].dir == 'asc' ? 'sorting_asc' : 'sorting_desc';
-                        }
-                    }
-                    classes.push(sortDirection);
-                }
-                return classes;
-            },
-            pages(){
-                let pages = [];
-                let start = this.currentPage - 2;
-                let end = this.currentPage + 2;
-                if(start < 1){
-                    start = 1;
-                    end = 5;
-                }
-                if(end > this.pageCount){
-                    start = this.pageCount - 4;
-                    end = this.pageCount;
-                }
-                if(start < 1){
-                    start = 1;
-                }
-                for(let i = start; i <= end; i++){
-                    pages.push(i);
-                }
-                return pages;
-            },
-        },
-        methods:{
-            refresh(){
-                this.initColumnSettings();
-                this.searchBarOpen = false;
-                if (this.loadDataOnInit) {
-                    this.loadData();
-                } else {
-                    this.rows = [];
-                }
-
-                // clear selected rows
-                this.selectedRows = [];
-
-                // clear search bar
-                if (!this.advancedSearch) {
-                    this.$el.querySelector('.filter-input').value = '';
-                }
-                // clear advanced search inputs
-                this.$el.querySelectorAll('.advanced-filter-input').forEach((input) => {
-                    input.value = '';
-                });
-            },
-
-            toggleSearch(){
-                if(!this.advancedSearch) {
-                    this.searchBarOpen = true;
-                }
-
-                if (this.advancedSearch) {
-                    this.searchBarOpen = !this.searchBarOpen;
-                }
-            },
-            clearSearch(){
-                this.searchBarOpen = false;
-                this.$el.querySelector('.filter-input').value = '';
-                this.columnSettings.search.value = '';
-
-                this.loadData();
-            },
-            setAdvancedSearchFilters(){
-                this.columnSettings.columns.forEach((column, index) => {
-                    if(column.searchable){
-                        column.search.value = this.$el.querySelector(`input[name="${column.name}"]`).value;
-                    }
-                });
-                this.loadData();
-            },
-            loadData(){
-                this.columnSettings.draw++;
-                this.clearSelectedRows();
-                const params = {
-                    ...this.requestQueryParams,
-                    ...this.columnSettings,
-                };
-                axios.get(this.url, {params: params}).then(response => {
-                    if (response.data.error) {
-                        this.cardError = 'error loading data. see console for details';
-                        console.error(response.data.error);
-                        return;
-                    }
-
-                    this.cardError = null;
-                    this.rows = response.data.data;
-                    this.recordsTotal = response.data.recordsTotal;
-                    this.recordsFiltered = response.data.recordsFiltered;
-                })
+                this.cardError = null;
+                this.rows = response.data.data;
+                this.recordsTotal = response.data.recordsTotal;
+                this.recordsFiltered = response.data.recordsFiltered;
+            })
                 .catch(error => {
                     this.cardError = error.response.data.message;
                     console.error(error);
                 });
-            },
-            initColumnSettings(){
-               this.columnSettings = {
-                    draw: 0,
-                    columns: this.columns.map((column, index) => {
-                        return {
-                            data: column.data,
-                            name: column.name,
-                            // if searchable is not set, default to true
-                            searchable: column.searchable === undefined ? true : column.searchable,
-                            sortable: column.sortable === undefined ? true : column.sortable,
-                            visible: column.visible === undefined ? true : column.visible,
-                            search: {
-                                value: '',
-                                regex: false,
-                            }
+        },
+        initColumnSettings() {
+            this.columnSettings = {
+                draw: 0,
+                columns: this.columns.map((column, index) => {
+                    return {
+                        data: column.data,
+                        name: column.name,
+                        // if searchable is not set, default to true
+                        searchable: column.searchable === undefined ? true : column.searchable,
+                        sortable: column.sortable === undefined ? true : column.sortable,
+                        visible: column.visible === undefined ? true : column.visible,
+                        search: {
+                            value: '',
+                            regex: false,
                         }
-                    }),
-                    order: this.order,
-                    start: 0,
-                    length: 10,
-                    search: {
-                        value: '',
-                        regex: false,
-                    },
-                }
-            },
-            setPageLength(length){
-                this.columnSettings.length = length;
+                    }
+                }),
+                order: this.order,
+                start: 0,
+                length: 10,
+                search: {
+                    value: '',
+                    regex: false,
+                },
+            }
+        },
+        setPageLength(length) {
+            this.columnSettings.length = length;
+            this.loadData();
+        },
+        setPage(page) {
+            if (page < 1 || page > this.pageCount) {
+                return;
+            }
+            this.columnSettings.start = (page - 1) * this.columnSettings.length;
+            this.loadData();
+        },
+        setSearchTerm() {
+            // wait for user to stop typing
+            setTimeout(() => {
+                this.columnSettings.search.value = this.$el.querySelector('.filter-input').value;
+                this.columnSettings.start = 0;
+                // set search term for each column if searchable
+                // this.columnSettings.columns.forEach((column, index) => {
+                //     if(column.searchable){
+                //         column.search.value = this.columnSettings.search.value;
+                //     }
+                // });
                 this.loadData();
-            },
-            setPage(page){
-                if(page < 1 || page > this.pageCount){
-                    return;
-                }
-                this.columnSettings.start = (page - 1) * this.columnSettings.length;
-                this.loadData();
-            },
-            setSearchTerm(){
-                // wait for user to stop typing
-                setTimeout(() => {
-                    this.columnSettings.search.value = this.$el.querySelector('.filter-input').value;
-                    this.columnSettings.start = 0;
-                    // set search term for each column if searchable
-                    // this.columnSettings.columns.forEach((column, index) => {
-                    //     if(column.searchable){
-                    //         column.search.value = this.columnSettings.search.value;
-                    //     }
-                    // });
-                    this.loadData();
-                }, 500);
-            },
-            setSorting(index){
-                // if column is not sortable, do nothing
-                if(!this.columnSettings.columns[index].sortable){
-                    return;
-                }
-                // console.log('sorting');
-                // // if column is already sorted, reverse sort direction
-                if(this.columnSettings.order[0].column == index){
-                    this.columnSettings.order[0].dir = this.columnSettings.order[0].dir == 'asc' ? 'desc' : 'asc';
-                }else{
-                    // if column is not sorted, set it as first sort column
-                    this.columnSettings.order = [
-                        {
-                            column: index,
-                            dir: 'asc',
-                        }
-                    ];
-                }
-                this.loadData();
-            },
-            generateLink(linkParams, row){
-                let resourceIds = [];
-                linkParams.resourceIds.forEach((resourceId) => {
-                    resourceIds.push(row[resourceId]);
+            }, 500);
+        },
+        setSorting(index) {
+            // if column is not sortable, do nothing
+            if (!this.columnSettings.columns[index].sortable) {
+                return;
+            }
+            // console.log('sorting');
+            // // if column is already sorted, reverse sort direction
+            if (this.columnSettings.order[0].column == index) {
+                this.columnSettings.order[0].dir = this.columnSettings.order[0].dir == 'asc' ? 'desc' : 'asc';
+            } else {
+                // if column is not sorted, set it as first sort column
+                this.columnSettings.order = [
+                    {
+                        column: index,
+                        dir: 'asc',
+                    }
+                ];
+            }
+            this.loadData();
+        },
+        generateLink(linkParams, row) {
+            let resourceIds = [];
+            linkParams.resourceIds.forEach((resourceId) => {
+                resourceIds.push(row[resourceId]);
+            });
+
+            let link = route(linkParams.name, resourceIds);
+
+            if (linkParams.query) {
+                link += '?' + new URLSearchParams(linkParams.query).toString();
+            }
+            return link;
+        },
+        selectAllRows() {
+            if (this.selectedRows.length == this.rows.length) {
+                this.selectedRows = [];
+            } else {
+                this.selectedRows = this.rows.map((row) => {
+                    return row.id;
                 });
+            }
+        },
+        clearSelectedRows() {
+            this.selectedRows = [];
+        },
+        filterColumns(params) {
+            // param example
+            // [
+            //     {
+            //         name: 'name',
+            //         value: 'John',
+            //     },
+            //     {
+            //         name: 'email',
+            //         value: 'john@example',
+            //     },
+            // ]
 
-                let link = route(linkParams.name, resourceIds);
-
-                if (linkParams.query) {
-                    link += '?' + new URLSearchParams(linkParams.query).toString();
-                }
-                return link;
-            },
-            selectAllRows(){
-                if(this.selectedRows.length == this.rows.length){
-                    this.selectedRows = [];
-                }else{
-                    this.selectedRows = this.rows.map((row) => {
-                        return row.id;
+            // set search term for each column if searchable
+            this.columnSettings.columns.forEach((column, index) => {
+                if (column.searchable) {
+                    column.search.value = '';
+                    params.forEach((param) => {
+                        if (param.name == column.name) {
+                            column.search.value = param.value;
+                        }
                     });
                 }
-            },
-            clearSelectedRows(){
-                this.selectedRows = [];
-            },
-            filterColumns(params){
-                // param example
-                // [
-                //     {
-                //         name: 'name',
-                //         value: 'John',
-                //     },
-                //     {
-                //         name: 'email',
-                //         value: 'john@example',
-                //     },
-                // ]
+            });
 
-                // set search term for each column if searchable
-                this.columnSettings.columns.forEach((column, index) => {
-                    if(column.searchable){
-                        column.search.value = '';
-                        params.forEach((param) => {
-                            if(param.name == column.name){
-                                column.search.value = param.value;
-                            }
-                        });
-                    }
-                });
-
-                this.loadData();
-            },
-            getSelectedRows(){
-                return this.selectedRows;
-            },
+            this.loadData();
         },
-        mounted(){
-            this.initColumnSettings();
-            if(this.loadDataOnInit){
-                this.loadData();
-            }
+        getSelectedRows() {
+            return this.selectedRows;
+        },
+    },
+    mounted() {
+        this.initColumnSettings();
+        if (this.loadDataOnInit) {
+            this.loadData();
         }
-
     }
+
+}
 </script>
 
 <style scoped>
@@ -559,7 +559,9 @@
     left: 15px;
     right: auto;
 }
-.card .card-search .close-search, .card .card-search .search-icon-left {
+
+.card .card-search .close-search,
+.card .card-search .search-icon-left {
     top: 50%;
     margin-top: -15px;
     line-height: 30px;
@@ -589,7 +591,8 @@
     right: 15px;
     left: auto;
 }
- .card .card-search .search-icon-left {
+
+.card .card-search .search-icon-left {
     top: 50%;
     margin-top: -15px;
     line-height: 30px;
@@ -642,7 +645,7 @@ ul.card-actions.icons li {
     min-width: 30px;
     height: 30px;
     line-height: 30px;
-    color: #999999!important;
+    color: #999999 !important;
     font-weight: 400;
     font-size: 12px;
     text-transform: uppercase;
@@ -663,7 +666,8 @@ ul.card-actions.icons li {
     background: transparent;
 }
 
-.card [class*=card-header-], .card[class*=bg-] {
+.card [class*=card-header-],
+.card[class*=bg-] {
     color: #ffffff;
 }
 
@@ -677,15 +681,23 @@ ul.card-actions.icons li {
     position: relative;
 }
 
-.card .card-header-primary .card-icon, .card .card-header-primary .card-text, .card .card-header-primary:not(.card-header-icon):not(.card-header-text), .card.bg-primary, .card.card-rotate.bg-primary .front, .card.card-rotate.bg-primary .back {
+.card .card-header-primary .card-icon,
+.card .card-header-primary .card-text,
+.card .card-header-primary:not(.card-header-icon):not(.card-header-text),
+.card.bg-primary,
+.card.card-rotate.bg-primary .front,
+.card.card-rotate.bg-primary .back {
     background: linear-gradient(60deg, #ab47bc, #8e24aa);
 }
 
-.card .card-header-primary .card-icon, .card .card-header-primary:not(.card-header-icon):not(.card-header-text), .card .card-header-primary .card-text {
+.card .card-header-primary .card-icon,
+.card .card-header-primary:not(.card-header-icon):not(.card-header-text),
+.card .card-header-primary .card-text {
     box-shadow: 0 4px 20px 0px rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(156, 39, 176, 0.4);
 }
 
-.card [class*=card-header-] .card-icon, .card [class*=card-header-] .card-text {
+.card [class*=card-header-] .card-icon,
+.card [class*=card-header-] .card-text {
     border-radius: 3px;
     background-color: #999999;
     padding: 15px;
@@ -694,7 +706,8 @@ ul.card-actions.icons li {
     float: left;
 }
 
-.card .card-header.card-header-icon i, .card .card-header.card-header-text i {
+.card .card-header.card-header-icon i,
+.card .card-header.card-header-text i {
     width: 33px;
     height: 33px;
     text-align: center;
@@ -714,13 +727,17 @@ ul.card-actions.icons li {
     font-size: 0.875rem;
 }
 
-.card .card-header.card-header-icon .card-title, .card .card-header.card-header-text .card-title {
+.card .card-header.card-header-icon .card-title,
+.card .card-header.card-header-text .card-title {
     margin-top: 15px;
     color: #3C4858;
 }
-.card .card-header.card-header-icon h4, .card .card-header.card-header-text h4 {
+
+.card .card-header.card-header-icon h4,
+.card .card-header.card-header-text h4 {
     font-weight: 300;
 }
+
 .card .card-header .card-title {
     margin-bottom: 3px;
 }
@@ -765,7 +782,8 @@ ul.card-actions.icons li {
     text-align: unset;
 }
 
-.dropdown-menu .dropdown-item, .dropdown-menu li > a {
+.dropdown-menu .dropdown-item,
+.dropdown-menu li>a {
     position: relative;
     width: auto;
     display: flex;
@@ -786,13 +804,18 @@ ul.card-actions.icons li {
     word-wrap: break-word;
 }
 
-.dropdown-menu .dropdown-item:hover, .dropdown-menu .dropdown-item:focus, .dropdown-menu a:hover, .dropdown-menu a:focus, .dropdown-menu a:active {
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus,
+.dropdown-menu a:hover,
+.dropdown-menu a:focus,
+.dropdown-menu a:active {
     box-shadow: 0 4px 20px 0px rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(156, 39, 176, 0.4);
     background-color: #9c27b0;
     color: #FFFFFF;
 }
 
-.dropdown-menu .dropdown-item, .dropdown-menu li > a {
+.dropdown-menu .dropdown-item,
+.dropdown-menu li>a {
     padding-right: 1.5rem;
     padding-left: 1.5rem;
 }
@@ -830,5 +853,9 @@ ul.card-actions.icons li {
 
 .dropdown-menu {
     margin: 0 !important;
+}
+
+.clickable-rows tbody tr {
+    cursor: pointer;
 }
 </style>

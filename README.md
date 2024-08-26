@@ -53,6 +53,7 @@ export default {
 The DatatableCard component accepts the following props:
 
 - `cardTitle` (String): The title for the datatable card.
+- `clickable-rows` (Boolean, optional, default: false): Set to true to enable `row-click` event.
 - `columns` (Array): An array of column objects defining the datatable columns.
   - `data` (String): The key to access the data for this column in the API response.
   - `displayName` (String): The display name or label for this column.
@@ -113,6 +114,9 @@ These methods are meant to be used by component internally, but maybe you can fi
     ]);
 ```
 - `refresh()`: Clears all sorting and filters, reloads or clears data based on `loadDataOnInit` prop.
+
+## Events
+- `row-click`: Emitted when row is click if `clickable-rows` prop is set to true. The event payload contains the clicked row data.
 
 ## Compatibility
 
