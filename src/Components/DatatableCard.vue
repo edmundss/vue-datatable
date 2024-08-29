@@ -75,7 +75,9 @@
                                 <template v-for="(column, index) in columns" :key="index">
                                     <th v-if="column.visible !== false"
                                         :class="[columnSortingClasses[index], column.sortable !== false ? 'sorting' : '']"
-                                        @click="setSorting(index)">
+                                        @click="setSorting(index)"
+                                        :style="comlumn.width ? { width: column.width } : {}"
+                                    >
                                         {{ column.displayName }}
                                     </th>
                                 </template>
