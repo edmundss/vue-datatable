@@ -76,7 +76,7 @@
                                     <th v-if="column.visible !== false"
                                         :class="[columnSortingClasses[index], column.sortable !== false ? 'sorting' : '']"
                                         @click="setSorting(index)"
-                                        :style="comlumn.width ? { width: column.width } : {}"
+                                        :style="column.width ? { width: column.width } : {}"
                                     >
                                         {{ column.displayName }}
                                     </th>
