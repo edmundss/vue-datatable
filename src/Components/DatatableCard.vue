@@ -116,7 +116,7 @@
                     <div class="dataTables_info">
                         Rāda {{ firstRecord }}. līdz {{ lastRecord }}. no {{ recordsFiltered }} ierakstiem
                         <span v-if="recordsFiltered != recordsTotal">
-                            (kopā {{ recordsTotal }} ierkasti)
+                            (kopā {{ recordsTotal }} ieraksti)
                         </span>
                     </div>
                     <div class="dataTables_paginate paging_simple_numbers user-select-none"
