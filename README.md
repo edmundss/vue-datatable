@@ -82,6 +82,75 @@ The DatatableCard component accepts the following props:
   - `label` (String, optional): Text to display inside button.
   - `class` (String, optional): CSS class to apply to button.
 
+## Link Parameters (`linkParams`)
+
+The `generateLink` method now supports **two modes** for building links:
+
+### 1. Laravel Route Name (default / original behavior)
+
+Use when you want to leverage Laravel named routes via Ziggy’s `route()` helper.
+
+```js
+{
+  data: 'title',
+  linkParams: {
+    name: 'users.show',       // Laravel route name
+    resourceIds: ['id'],      // values taken from the row
+    query: { tab: 'info' }    // optional query params
+  }
+}
+```
+
+➡️ If `row.id = 5`, this builds:
+```
+/users/5?tab=info
+```
+
+### 2. Link Template
+
+Use when you want full control over the URL structure without relying on Laravel route names.
+
+#### Object Form
+```js
+{
+  data: 'title',
+  linkParams: {
+    template: '/users/{id}/posts/{post_id}',
+    params: { post_id: 'latest' }, // override or add interpolation values
+    query: { filter: 'active' }    // optional query params
+  }
+}
+```
+➡️ If `row.id = 5`, this builds:
+```
+/users/5/posts/latest?filter=active
+```
+
+#### String Shorthand
+```js
+{
+  data: 'title',
+  linkParams: '/users/{id}'
+}
+```
+➡️ If `row.id = 5`, this builds:
+```
+/users/5
+```
+
+### Template Placeholders
+
+Templates support both styles:
+- `{key}` → `/users/{id}`
+- `:key` → `/users/:id`
+
+Both will be replaced with the row’s value (or overridden via `params`).
+
+### Notes
+- If both `params` and row values define the same key, `params` takes precedence.
+- Query parameters (`query`) are supported in both modes.
+- If you just need a simple route name, use **mode 1**; if you want custom URLs, use **mode 2**.
+
 ## Internal Methods
 
 These methods are meant to be used by component internally, but maybe you can find use for them

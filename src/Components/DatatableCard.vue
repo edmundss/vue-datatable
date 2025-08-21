@@ -456,18 +456,65 @@ export default {
             }
             this.loadData();
         },
+        /**
+         * Build a link for a cell. Supports either:
+         *  1) Laravel route name (via Ziggy `route()`) — provide `{ name, resourceIds?, query? }`
+         *  2) Link template string — provide `{ template, params?, query? }` OR pass the template directly as a string.
+         *
+         * Notes
+         * - `resourceIds` is an array of row keys (in order) used for `route(name, [...])`.
+         * - `template` supports placeholders like `/users/{id}/posts/{post_id}` or `/users/:id`.
+         * - `params` (optional) lets you override/augment values used to interpolate the template.
+         * - `query` (optional) is appended as a query string for both modes.
+         */
         generateLink(linkParams, row) {
-            let resourceIds = [];
-            linkParams.resourceIds.forEach((resourceId) => {
-                resourceIds.push(row[resourceId]);
-            });
+            // Helper: append query object as `?a=1&b=2`
+            const appendQuery = (href, query) => {
+                if (!query || typeof query !== 'object') return href;
+                const qs = new URLSearchParams(query).toString();
+                return qs ? `${href}?${qs}` : href;
+            };
 
-            let link = route(linkParams.name, resourceIds);
+            // Helper: interpolate `{key}` and `:key` tokens from row/params
+            const interpolate = (tpl, ctx) => {
+                if (!tpl) return '';
+                // {key}
+                let out = tpl.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] ?? ''));
+                // :key (avoid matching protocol like http://)
+                out = out.replace(/(^|[^:]):(\w+)/g, (m, prefix, k) => `${prefix}${ctx[k] ?? ''}`);
+                return out;
+            };
 
-            if (linkParams.query) {
-                link += '?' + new URLSearchParams(linkParams.query).toString();
+            // String shorthand => treat as a template
+            if (typeof linkParams === 'string') {
+                const href = interpolate(linkParams, row);
+                return href; // no query in shorthand; use object form if you need query
             }
-            return link;
+
+            // Safety
+            if (!linkParams || typeof linkParams !== 'object') return '';
+
+            // Template mode
+            if (linkParams.template) {
+                // Merge row first, then allow explicit overrides via params
+                const ctx = { ...(row || {}), ...(linkParams.params || {}) };
+                const href = interpolate(linkParams.template, ctx);
+                return appendQuery(href, linkParams.query);
+            }
+
+            // Route name mode (default/back-compat)
+            if (linkParams.name) {
+                const ids = Array.isArray(linkParams.resourceIds)
+                ? linkParams.resourceIds.map((key) => (row ? row[key] : undefined))
+                : [];
+
+                // `route` comes from Ziggy; assume it is globally available as in your existing codebase
+                let href = route(linkParams.name, ids);
+                return appendQuery(href, linkParams.query);
+            }
+
+            // Nothing to build
+            return '';
         },
         selectAllRows() {
             if (this.selectedRows.length == this.rows.length) {
