@@ -95,10 +95,11 @@
                                 </td>
                                 <template v-for="(column, index) in columns" :key="index">
                                     <td v-if="column.visible !== false">
-                                        <Link v-if="column.linkParams" :href="generateLink(column.linkParams, row)"
+                                        <Link v-if="column.linkParams && hyperlinkStyle === 'Link'" :href="generateLink(column.linkParams, row)"
                                             v-html="row[column.data]">
                                         </Link>
-                                        <span v-else v-html="row[column.data]"></span>
+                                        <a v-else-if="column.linkParams" :href="generateLink(column.linkParams, row)"
+                                            v-html="row[column.data]"></a>
                                     </td>
                                 </template>
                                 <td v-if="actions">
@@ -225,6 +226,12 @@ export default {
             type: Boolean,
             required: false,
             default: false,
+        },
+        hyperlinkStyle: {
+            // either Link or a tag
+            type: String,
+            required: false,
+            default: 'Link',
         },
     },
     emits: ['row-click'],
