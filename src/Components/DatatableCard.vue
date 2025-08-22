@@ -98,8 +98,11 @@
                                         <Link v-if="column.linkParams && hyperlinkStyle === 'Link'" :href="generateLink(column.linkParams, row)"
                                             v-html="row[column.data]">
                                         </Link>
-                                        <a v-else-if="column.linkParams" :href="generateLink(column.linkParams, row)"
+                                        <a v-else-if="column.linkParams && hyperlinkStyle === 'a'" :href="generateLink(column.linkParams, row)"
                                             v-html="row[column.data]"></a>
+                                        <template v-else>
+                                            <span v-html="row[column.data]"></span>
+                                        </template>
                                     </td>
                                 </template>
                                 <td v-if="actions">
