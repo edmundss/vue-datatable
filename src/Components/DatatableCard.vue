@@ -239,6 +239,11 @@ export default {
             required: false,
             default: 'Link',
         },
+        pageLength: {
+            type: Number,
+            required: false,
+            default: 10,
+        },
     },
     emits: ['row-click'],
     data() {
@@ -472,7 +477,7 @@ export default {
                 }),
                 order: this.order,
                 start: 0,
-                length: 10,
+                length: this.pageLength,
                 search: {
                     value: '',
                     regex: false,
