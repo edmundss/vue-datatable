@@ -86,7 +86,7 @@
                         </thead>
                         <tbody>
                             <tr
-                                v-for="(row, index) in rows" 
+                                v-for="(row, index) in rows"
                                 :key="index"
                                 @click="clickableRows ? $emit('row-click', row) : null"
                             >
@@ -94,7 +94,10 @@
                                     <input type="checkbox" :value="row.id" v-model="selectedRows">
                                 </td>
                                 <template v-for="(column, index) in columns" :key="index">
-                                    <td v-if="column.visible !== false">
+                                    <td
+                                        v-if="column.visible !== false"
+                                        :class="getCellClasses(column, row)"
+                                    >
                                         <Link v-if="column.linkParams && hyperlinkStyle === 'Link'" :href="generateLink(column.linkParams, row)"
                                             v-html="row[column.data]">
                                         </Link>
@@ -116,30 +119,30 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="dataTables_info">
+                            Rāda {{ firstRecord }}. līdz {{ lastRecord }}. no {{ recordsFiltered }} ierakstiem
+                            <span v-if="recordsFiltered != recordsTotal">
+                                (kopā {{ recordsTotal }} ieraksti)
+                            </span>
+                        </div>
+                        <div class="dataTables_paginate paging_simple_numbers user-select-none"
+                            id="document-index-table_paginate">
+                            <a class="paginate_button first user-select-none" :class="{ disabled: columnSettings.start == 0 }"
+                                @click="setPage(1)">Pirmā</a>
+                            <a class="paginate_button previous" :class="{ disabled: columnSettings.start == 0 }"
+                                @click="setPage(currentPage - 1)">Iepriekšējā</a>
 
-                    <div class="dataTables_info">
-                        Rāda {{ firstRecord }}. līdz {{ lastRecord }}. no {{ recordsFiltered }} ierakstiem
-                        <span v-if="recordsFiltered != recordsTotal">
-                            (kopā {{ recordsTotal }} ieraksti)
-                        </span>
+                            <span>
+                                <a v-for="(page, index) in pages" class="paginate_button"
+                                    :class="{ current: page == currentPage }" @click="setPage(page)">{{ page }}</a>
+                            </span>
+                            <a class="paginate_button next" :class="{ disabled: columnSettings.start >= lastPageStart }"
+                                @click="setPage(currentPage + 1)">Nākamā</a>
+                            <a class="paginate_button last" :class="{ disabled: columnSettings.start >= lastPageStart }"
+                                @click="setPage(pageCount)">Pēdējā</a>
+                        </div>
                     </div>
-                    <div class="dataTables_paginate paging_simple_numbers user-select-none"
-                        id="document-index-table_paginate">
-                        <a class="paginate_button first user-select-none" :class="{ disabled: columnSettings.start == 0 }"
-                            @click="setPage(1)">Pirmā</a>
-                        <a class="paginate_button previous" :class="{ disabled: columnSettings.start == 0 }"
-                            @click="setPage(currentPage - 1)">Iepriekšējā</a>
-
-                        <span>
-                            <a v-for="(page, index) in pages" class="paginate_button"
-                                :class="{ current: page == currentPage }" @click="setPage(page)">{{ page }}</a>
-                        </span>
-                        <a class="paginate_button next" :class="{ disabled: columnSettings.start >= lastPageStart }"
-                            @click="setPage(currentPage + 1)">Nākamā</a>
-                        <a class="paginate_button last" :class="{ disabled: columnSettings.start >= lastPageStart }"
-                            @click="setPage(pageCount)">Pēdējā</a>
-                    </div>
-
                 </div>
             </div>
         </div>
@@ -322,6 +325,61 @@ export default {
         },
     },
     methods: {
+        /**
+         * Resolve classes for a cell based on column definition and row data.
+         *
+         * column.classes supports:
+         *  1) String => always applied, e.g. "text-end bg-light"
+         *  2) Array of rules => [{ min, max, class, valueKey? }]
+         *     - valueKey (optional) lets you read a different field than column.data
+         *     - min/max are numeric thresholds (inclusive)
+         */
+        getCellClasses(column, row) {
+            const classes = [];
+
+            if (!column.classes) {
+                return classes;
+            }
+
+            // Simple string: always apply
+            if (typeof column.classes === 'string') {
+                classes.push(column.classes);
+                return classes;
+            }
+
+            // Array of conditional rules
+            if (Array.isArray(column.classes)) {
+                const baseValue = row[column.data];
+
+                column.classes.forEach((rule) => {
+                    if (!rule || !rule.class) {
+                        return;
+                    }
+
+                    // which value to inspect (defaults to column.data)
+                    const raw = rule.valueKey ? row[rule.valueKey] : baseValue;
+
+                    // try to parse numeric (strip % if needed)
+                    let num = raw;
+                    if (typeof num === 'string') {
+                        num = parseFloat(num.replace('%', '').trim());
+                    }
+
+                    if (typeof num !== 'number' || isNaN(num)) {
+                        return;
+                    }
+
+                    const min = rule.min !== undefined ? rule.min : -Infinity;
+                    const max = rule.max !== undefined ? rule.max : Infinity;
+
+                    if (num >= min && num <= max) {
+                        classes.push(rule.class);
+                    }
+                });
+            }
+
+            return classes;
+        },
         handleEmit(emit, row) {
             this.$emit(emit, row);
         },
