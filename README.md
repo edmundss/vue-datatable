@@ -1,29 +1,39 @@
-# DatatableCard Component
+# Vue DatatableCard
 
-DatatableCard is a custom Vue.js component designed to provide a flexible and customizable datatable for your web applications. It is built from scratch, inspired by the Bootstrap datatable, but with added features to support Vue.js style links and row selection.
+`DatatableCard` is a server-side Vue 3 datatable component designed for Laravel applications using a DataTables-compatible backend, such as [`yajra/laravel-datatables-oracle`](https://yajrabox.com/docs/laravel-datatables).
+
+It supports server-side pagination, sorting, global and per-column search, row selection, clickable rows, custom row actions, localized interface text, Inertia or native links, custom cell rendering, and conditional cell classes.
+
+## Requirements
+
+- Vue 3
+- Axios
+- `@inertiajs/vue3`
+- A server endpoint that accepts DataTables-style query parameters and returns a compatible response
+
+The component also uses Bootstrap/Material-style classes and Material Icons in its default markup.
 
 ## Installation
-
-You can install the DatatableCard component using npm:
 
 ```bash
 npm install @sulzanoks/vue-datatable
 ```
 
-## Usage
-
-To use the DatatableCard component in your Vue.js application, you can import it and include it in your component's template. Here's an example of how to use it:
+## Basic usage
 
 ```vue
 <template>
-  <div>
-    <datatable-card
-      :card-title="cardTitle"
-      :columns="columns"
-      :url="dataUrl"
-    >
-    </datatable-card>
-  </div>
+    <DatatableCard
+        ref="datatable"
+        card-title="Users"
+        card-icon="people"
+        url="/users/datatable"
+        :columns="columns"
+        :order="[{ column: 0, dir: 'asc' }]"
+        :page-length="25"
+        clickable-rows
+        @row-click="openUser"
+    />
 </template>
 
 <script>
@@ -31,169 +41,506 @@ import DatatableCard from '@sulzanoks/vue-datatable';
 import '@sulzanoks/vue-datatable/dist/style.css';
 
 export default {
-  components: {
-    DatatableCard,
-  },
-  data() {
-    return {
-      cardTitle: 'My Datatable',
-      columns: [
-        // Define your datatable columns here
-        // Example: { data: 'id', name: 'ID', sortable: true, searchable: true }
-      ],
-      dataUrl: '/api/data', // Replace with your data endpoint URL
-    };
-  },
+    components: {
+        DatatableCard,
+    },
+
+    data() {
+        return {
+            columns: [
+                {
+                    data: 'id',
+                    name: 'users.id',
+                    displayName: 'ID',
+                    searchable: false,
+                    width: '80px',
+                },
+                {
+                    data: 'name',
+                    name: 'users.name',
+                    displayName: 'Name',
+                    link: row => `/users/${row.id}`,
+                },
+                {
+                    data: 'email',
+                    name: 'users.email',
+                    displayName: 'Email',
+                },
+            ],
+        };
+    },
+
+    methods: {
+        openUser(row) {
+            window.location.href = `/users/${row.id}`;
+        },
+    },
 };
 </script>
 ```
 
 ## Props
 
-The DatatableCard component accepts the following props:
+| Prop | Type | Default | Description |
+|---|---|---:|---|
+| `url` | `String` | required | Server endpoint used to load table data. |
+| `columns` | `Array` | required | Column definitions. See [Column configuration](#column-configuration). |
+| `locale` | `String` | `'en'` | Locale used for built-in interface text. |
+| `vocabulary` | `Object` | `{}` | Custom translations grouped by locale. |
+| `cardTitle` | `String` | `null` | Card title. |
+| `cardIcon` | `String` | `null` | Material Icon name displayed in the header. |
+| `cardIconStyle` | `String` | `'card-header-primary'` | CSS class applied to the icon header when there is no error. |
+| `cardClasses` | `String` | `null` | Additional classes applied to the root card. |
+| `createLink` | `String` | `null` | URL used by the header create button. It is rendered as an Inertia `<Link>`. |
+| `selectableRows` | `Boolean` | `false` | Enables row checkboxes. Rows must contain an `id` value. |
+| `order` | `Array` | `[{ column: 0, dir: 'asc' }]` | Initial DataTables sorting configuration. |
+| `advancedSearch` | `Boolean` | `false` | Enables one search field for every searchable column. |
+| `loadDataOnInit` | `Boolean` | `true` | Loads data when the component mounts. |
+| `requestQueryParams` | `Object` | `{}` | Extra query parameters included with every server request. |
+| `actions` | `Array` | `undefined` | Row action button definitions. |
+| `clickableRows` | `Boolean` | `false` | Emits `row-click` when a table row is clicked. |
+| `hyperlinkStyle` | `String` | `'Link'` | Controls column link rendering. Supported values are `'Link'` and `'a'`. |
+| `pageLength` | `Number` | `10` | Initial number of rows per page. |
 
-- `cardTitle` (String): The title for the datatable card.
-- `clickable-rows` (Boolean, optional, default: false): Set to true to enable `row-click` event.
-- `columns` (Array): An array of column objects defining the datatable columns.
-  - `data` (String): The key to access the data for this column in the API response.
-  - `displayName` (String): The display name or label for this column.
-  - `name` (String): The unique name or identifier for this column.
-  - `searchable` (Boolean, optional, default: true): Set to `false` to disable searching for this column.
-  - `sortable` (Boolean, optional, default: true): Set to `false` to disable sorting for this column.
-  - `visible` (Boolean, optional, default: true): Set to `false` to remove column from table.
-  - `width` (String, optional): Set solumn to width specified css param.
-  - `linkParams` (Object, optional): Defines link parameters for generating Vue.js style links.
-    - `name` (String): The name of the Vue.js route to navigate to when clicking the link.
-    - `resourceIds` (Array): An array of resource IDs to use in generating the link. Replace with actual resource IDs.
-    - `query` (Object, optional): object of attributes to include in link query params
-- `url` (String): The URL for fetching datatable data.
-- `selectableRows` (Boolean): Set to `true` to enable row selection. For now only works if you have a, `id` column in your data set. 
-- `order` (Array): The initial column sorting order. example: `[{ column: 0, dir: 'asc' }]`
-- `advancedSearch` (Boolean): Set to `true` to enable advanced search, which generates an individual search input for each searchable column.
-- `loadDataOnInit` (Boolean): Set to `true` to load data when the component is initialized.
-- `cardIconStyle` (String, optional, default: 'card-header-primary'. There are no other options): The CSS class to apply to the card's header for icon styling.
-- `cardIcon` (String, optional, default: null): The name of an icon from [Google Icons](https://fonts.google.com/icons) to display in the card's header. Provide the icon name without any additional markup, such as `<i>` tags. For example, if you want to use the "account_circle" icon, set this prop to `'account_circle'`. If not specified, no icon will be displayed in the card's header.
-- `cardClasses` (String, optional, default: null): Additional CSS classes to apply to the card.
-- `createLink` (String, optional, default: null): A link or URL to navigate to when clicking a "Create" button or link within the card.
-- `requestQueryParams` (Object, optional): additional request query parameters to include when loading data from server.
-- `actions` (Array, optional): Array of action objects defining action buttons for each row.
-  - `emit` (String, required): name of event to emit upon click
-  - `icon` (String, optional): The name of an icon from [Google Icons](https://fonts.google.com/icons) to display inside button.
-  - `label` (String, optional): Text to display inside button.
-  - `class` (String, optional): CSS class to apply to button.
+In templates, camelCase props can be passed using kebab-case, for example `page-length`, `clickable-rows`, and `request-query-params`.
 
-## Link Parameters (`linkParams`)
+## Column configuration
 
-The `generateLink` method now supports **two modes** for building links:
+Each entry in `columns` supports the following properties:
 
-### 1. Laravel Route Name (default / original behavior)
+| Property | Type | Default | Description |
+|---|---|---:|---|
+| `data` | `String` | required | Row property displayed in the cell and sent as the DataTables column `data` value. |
+| `name` | `String` | recommended | Server-side column name. Required for advanced search and normally used by the backend for filtering and sorting. |
+| `displayName` | `String` | required | Column heading and advanced-search placeholder. |
+| `searchable` | `Boolean` | `true` | Set to `false` to disable searching for the column. |
+| `sortable` | `Boolean` | `true` | Set to `false` to disable sorting for the column. |
+| `visible` | `Boolean` | `true` | Set to `false` to hide the column while keeping it in the request configuration. |
+| `width` | `String` | — | CSS width applied to the heading, such as `'120px'` or `'20%'`. |
+| `link` | `Function` | — | Receives the current row and returns the destination URL. |
+| `render` | `Function` | — | Receives the current row and returns HTML rendered with `v-html`. |
+| `classes` | `String \| Array` | — | Static classes or conditional numeric class rules for the table cell. |
 
-Use when you want to leverage Laravel named routes via Ziggy’s `route()` helper.
+### Column links
+
+Define `link` as a function that receives the current row:
 
 ```js
 {
-  data: 'title',
-  linkParams: {
-    name: 'users.show',       // Laravel route name
-    resourceIds: ['id'],      // values taken from the row
-    query: { tab: 'info' }    // optional query params
-  }
+    data: 'name',
+    name: 'users.name',
+    displayName: 'Name',
+    link: row => `/users/${row.id}`,
 }
 ```
 
-➡️ If `row.id = 5`, this builds:
+By default, links use Inertia's `<Link>` component:
+
+```vue
+<DatatableCard hyperlink-style="Link" />
 ```
-/users/5?tab=info
+
+Use a native anchor instead when a full browser navigation or download is required:
+
+```vue
+<DatatableCard hyperlink-style="a" />
 ```
 
-### 2. Link Template
+The previous `linkParams` and Ziggy-based `generateLink()` API is no longer supported. Generate the URL in the `link(row)` callback or return a ready-to-use URL from the backend:
 
-Use when you want full control over the URL structure without relying on Laravel route names.
-
-#### Object Form
 ```js
 {
-  data: 'title',
-  linkParams: {
-    template: '/users/{id}/posts/{post_id}',
-    params: { post_id: 'latest' }, // override or add interpolation values
-    query: { filter: 'active' }    // optional query params
-  }
+    data: 'invoice_number',
+    name: 'invoices.invoice_number',
+    displayName: 'Invoice',
+    link: row => row.url,
 }
 ```
-➡️ If `row.id = 5`, this builds:
-```
-/users/5/posts/latest?filter=active
-```
 
-#### String Shorthand
+### Custom cell rendering
+
+Use `render(row)` to return custom HTML:
+
 ```js
 {
-  data: 'title',
-  linkParams: '/users/{id}'
+    data: 'status',
+    name: 'status',
+    displayName: 'Status',
+    render: row => `<span class="badge bg-success">${row.status}</span>`,
 }
 ```
-➡️ If `row.id = 5`, this builds:
+
+`render()` output is inserted using `v-html`. Only return trusted or sanitized HTML. When `render` is defined, it takes precedence over `link` and the normal text value.
+
+### Static cell classes
+
+```js
+{
+    data: 'total',
+    name: 'total',
+    displayName: 'Total',
+    classes: 'text-end fw-bold',
+}
 ```
-/users/5
+
+### Conditional cell classes
+
+`classes` can also be an array of numeric rules. The `min` and `max` limits are inclusive.
+
+```js
+{
+    data: 'difference',
+    name: 'difference',
+    displayName: 'Difference',
+    classes: [
+        { max: -0.01, class: 'text-danger' },
+        { min: 0, max: 0, class: 'text-muted' },
+        { min: 0.01, class: 'text-success' },
+    ],
+}
 ```
 
-### Template Placeholders
+Use `valueKey` to evaluate another row property:
 
-Templates support both styles:
-- `{key}` → `/users/{id}`
-- `:key` → `/users/:id`
-
-Both will be replaced with the row’s value (or overridden via `params`).
-
-### Notes
-- If both `params` and row values define the same key, `params` takes precedence.
-- Query parameters (`query`) are supported in both modes.
-- If you just need a simple route name, use **mode 1**; if you want custom URLs, use **mode 2**.
-
-## Internal Methods
-
-These methods are meant to be used by component internally, but maybe you can find use for them
-
-- `toggleSearch()`: Toggle the search input.
-- `clearSearch()`: Clear the search bar and reload data.
-- `setAdvancedSearchFilters()`: Set advanced search filters based in input element values and reload data.
-- `loadData()`: Load datatable data.
-- `initColumnSettings()`: Initialize column settings.
-- `setPageLength(length)`: Set the number of rows per page and reload data.
-- `setPage(page)`: Set the current page and reload data.
-- `setSearchTerm()`: Set the full text search term for basic search on all columns and reload data.
-- `setSorting(index)`: Set the sorting order for a column and reload data.
-- `generateLink(linkParams, row)`: Generate a link based on parameters and row data.
-- `selectAllRows()`: Select or deselect all rows.
-- `clearSelectedRows()`: Clear the selected rows.
-
-## Methods
-- `getSelectedRows()`: Returns array of selected rows
-- `filterColumns(params)`: Filter columns based on parameters and reload data.
-```javascript
-    this.$refs.myDataTable.filterColumns([
+```js
+{
+    data: 'hourly_rate',
+    name: 'hourly_rate',
+    displayName: 'Hourly rate',
+    classes: [
         {
-            name: 'serial_number',
-            value: this.uniqueId,
+            valueKey: 'rate_difference',
+            max: -0.01,
+            class: 'bg-danger-subtle',
         },
-        {
-            name: 'product_name',
-            value: this.productName,
-        }
-    ]);
+    ],
+}
 ```
-- `refresh()`: Clears all sorting and filters, reloads or clears data based on `loadDataOnInit` prop.
+
+String values are parsed as numbers, and a trailing percent sign is ignored during parsing.
+
+## Localization
+
+The component translates its interface using the `locale` and `vocabulary` props.
+
+```vue
+<DatatableCard
+    locale="lv"
+    :vocabulary="vocabulary"
+    :columns="columns"
+    url="/users/datatable"
+/>
+```
+
+```js
+export default {
+    data() {
+        return {
+            vocabulary: {
+                lv: {
+                    search: 'Meklēt',
+                    close: 'Aizvērt',
+                    createNew: 'Izveidot',
+                    showEntries: 'Rādīt ierakstu skaitu',
+                    actions: 'Darbības',
+                    showingRecords: 'Rāda {first}. līdz {last}. no {filtered} ierakstiem',
+                    totalRecords: 'kopā {total} ieraksti',
+                    first: 'Pirmā',
+                    previous: 'Iepriekšējā',
+                    next: 'Nākamā',
+                    last: 'Pēdējā',
+                    loadingError: 'Neizdevās ielādēt datus',
+                },
+            },
+        };
+    },
+};
+```
+
+### Translation keys
+
+| Key | Used for |
+|---|---|
+| `search` | Search placeholder, search button, and tooltip |
+| `close` | Close-search tooltip |
+| `createNew` | Create-link tooltip |
+| `showEntries` | Page-length menu tooltip |
+| `actions` | Row actions column heading |
+| `showingRecords` | Record-range text; supports `{first}`, `{last}`, and `{filtered}` |
+| `totalRecords` | Unfiltered total; supports `{total}` |
+| `first` | First-page button |
+| `previous` | Previous-page button |
+| `next` | Next-page button |
+| `last` | Last-page button |
+| `loadingError` | Generic data-loading error |
+
+Translation lookup order is:
+
+1. `vocabulary[locale][key]`
+2. `vocabulary.en[key]`
+3. package defaults for the selected locale
+4. package English default
+5. the translation key itself
+
+The locale key must match the `locale` prop exactly.
+
+## Advanced search
+
+Enable per-column inputs with:
+
+```vue
+<DatatableCard advanced-search />
+```
+
+An input is generated for each column where `searchable !== false`. Each searchable column should have a unique `name` value.
+
+The search toolbar is opened and closed with the header search icon. Submitting the form resets pagination to the first page and reloads the data.
+
+## Global search
+
+When `advancedSearch` is disabled, the component displays a global search field. Input is debounced by 500 milliseconds before a new request is sent.
+
+## Row selection
+
+```vue
+<DatatableCard
+    ref="datatable"
+    selectable-rows
+    :columns="columns"
+    url="/users/datatable"
+/>
+```
+
+Rows must include an `id` property. Selection applies to the currently loaded page and is cleared whenever data is reloaded.
+
+Read the selected IDs through the public method:
+
+```js
+const selectedIds = this.$refs.datatable.getSelectedRows();
+```
+
+## Clickable rows
+
+```vue
+<DatatableCard
+    clickable-rows
+    @row-click="handleRowClick"
+/>
+```
+
+```js
+methods: {
+    handleRowClick(row) {
+        console.log(row);
+    },
+}
+```
+
+Clicks on selection checkboxes, column links, and action buttons do not trigger `row-click`.
+
+## Row actions
+
+Define one or more buttons using the `actions` prop:
+
+```vue
+<DatatableCard
+    :columns="columns"
+    :actions="actions"
+    url="/users/datatable"
+    @edit="editUser"
+    @remove="removeUser"
+/>
+```
+
+```js
+export default {
+    data() {
+        return {
+            actions: [
+                {
+                    emit: 'edit',
+                    icon: 'edit',
+                    label: 'Edit',
+                    class: 'btn-primary',
+                },
+                {
+                    emit: 'remove',
+                    icon: 'delete',
+                    label: 'Delete',
+                    class: 'btn-danger',
+                },
+            ],
+        };
+    },
+
+    methods: {
+        editUser(row) {
+            // Handle edit action
+        },
+
+        removeUser(row) {
+            // Handle remove action
+        },
+    },
+};
+```
+
+Each action supports:
+
+| Property | Type | Description |
+|---|---|---|
+| `emit` | `String` | Event name emitted with the current row as its payload. |
+| `icon` | `String` | Optional Material Icon name. |
+| `label` | `String` | Optional button label. |
+| `class` | `String \| Object \| Array` | Classes passed to the button's Vue `:class` binding. |
+
+The actions column is only rendered when the array contains at least one item.
+
+## Extra request parameters
+
+Use `requestQueryParams` to append application-specific filters:
+
+```vue
+<DatatableCard
+    :request-query-params="{
+        organization_id: organizationId,
+        active: 1,
+    }"
+/>
+```
+
+These values are merged into the same Axios request as the DataTables parameters.
+
+## Slots
+
+### `header`
+
+Adds custom content at the beginning of the card header. The built-in icon, title, error text, and controls are still rendered.
+
+```vue
+<DatatableCard>
+    <template #header>
+        <span class="text-muted">Updated moments ago</span>
+    </template>
+</DatatableCard>
+```
+
+### `actions`
+
+Adds custom controls before the built-in create, search, and page-length controls.
+
+```vue
+<DatatableCard>
+    <template #actions>
+        <li>
+            <button type="button" @click="exportRows">Export</button>
+        </li>
+    </template>
+</DatatableCard>
+```
+
+### Default slot
+
+Adds content inside the card body above the search toolbar and table.
+
+```vue
+<DatatableCard>
+    <div class="alert alert-info">
+        Select a row to view details.
+    </div>
+</DatatableCard>
+```
+
+## Public methods
+
+Assign a template ref before calling public methods:
+
+```vue
+<DatatableCard ref="datatable" />
+```
+
+### `refresh()`
+
+Resets sorting, filters, pagination, selection, and search inputs. When `loadDataOnInit` is `true`, it reloads data; otherwise it clears the rows.
+
+```js
+this.$refs.datatable.refresh();
+```
+
+### `filterColumns(params)`
+
+Sets server-side search values for named columns, resets pagination, and reloads data.
+
+```js
+this.$refs.datatable.filterColumns([
+    {
+        name: 'serial_number',
+        value: this.uniqueId,
+    },
+    {
+        name: 'product_name',
+        value: this.productName,
+    },
+]);
+```
+
+Columns not included in `params` have their current search value cleared.
+
+### `getSelectedRows()`
+
+Returns the selected row IDs from the currently loaded page:
+
+```js
+const selectedIds = this.$refs.datatable.getSelectedRows();
+```
 
 ## Events
-- `row-click`: Emitted when row is click if `clickable-rows` prop is set to true. The event payload contains the clicked row data.
+
+| Event | Payload | Description |
+|---|---|---|
+| `row-click` | Current row object | Emitted when `clickableRows` is enabled and the user clicks a row. |
+| Action-defined event | Current row object | Emitted when a configured row action is clicked. The event name comes from `action.emit`. |
+
+## Server-side API
+
+The component sends DataTables-style parameters through an Axios `GET` request, including:
+
+- `draw`
+- `columns`
+- `order`
+- `start`
+- `length`
+- `search`
+- values from `requestQueryParams`
+
+The endpoint should return at least:
+
+```json
+{
+    "data": [],
+    "recordsTotal": 0,
+    "recordsFiltered": 0
+}
+```
+
+The component also recognizes an `error` field in a successful response:
+
+```json
+{
+    "error": "Unable to load records"
+}
+```
+
+When an Axios request fails, the component displays the response message when available, otherwise it uses the localized `loadingError` text.
 
 ## Compatibility
 
-This component is designed to work with Laravel's [`yajra/laravel-datatables-oracle`](https://yajrabox.com/docs/laravel-datatables). It may work with other packages that use a similar input/output structure, but it has not been tested extensively with other packages.
+The component is designed for Laravel endpoints powered by [`yajra/laravel-datatables-oracle`](https://yajrabox.com/docs/laravel-datatables), but it can work with any backend that accepts and returns the same request/response structure.
 
-Please make sure that your Laravel backend and the API endpoints are configured to work with this component.
+## Security
+
+The `render(row)` column callback uses Vue's `v-html`. Never insert unsanitized user-controlled content through `render()`.
 
 ## License
 
-This DatatableCard component is open-source software licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+This project is open-source software licensed under the MIT License. See [LICENSE](LICENSE) for details.

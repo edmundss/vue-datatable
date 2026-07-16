@@ -1,7 +1,16 @@
 <template>
     <div class="card" :class="cardClasses">
-        <header class="card-header"
-            :class="{ 'card-header-primary': !cardError && cardIcon, 'card-header-danger': cardError && cardIcon, 'card-header-icon': cardIcon }">
+        <header 
+            class="card-header"
+            :class="[
+                {
+                    'card-header-danger': cardError && cardIcon,
+                    'card-header-icon': cardIcon 
+                },
+                !cardError && cardIcon ? cardIconStyle : null,
+            ]"
+        >
+            <slot name="header"></slot>
             <div v-if="cardIcon" class="card-icon">
                 <i v-if="!cardError" class="material-icons">{{ cardIcon }}</i>
                 <i v-else class="material-icons">dangerous</i>
@@ -11,9 +20,9 @@
             <div v-if="!advancedSearch" class="card-search" :class="{ open: searchBarOpen }">
                 <div class="form-group label-floating is-empty">
                     <i class="material-icons search-icon-left">search</i>
-                    <input type="text" class="form-control filter-input" placeholder="Search..." autocomplete="off"
+                    <input type="text" class="form-control filter-input" :placeholder="t('search')" autocomplete="off"
                         @keyup="setSearchTerm">
-                    <a href="javascript:void(0)" class="close-search" @click="clearSearch" data-tippy-content="Close">
+                    <a href="javascript:void(0)" class="close-search" @click="clearSearch" :data-tippy-content="t('close')">
                         <i class="material-icons">close</i>
                     </a>
                 </div>
@@ -21,16 +30,16 @@
             <ul class="card-actions icons right-top">
                 <slot name="actions"></slot>
                 <li v-if="createLink">
-                    <Link :href="createLink" data-tippy-content="Create new">
+                    <Link :href="createLink" :data-tippy-content="t('createNew')">
                     <i class="material-icons">add</i>
                     </Link>
                 </li>
                 <li>
-                    <a href="javascript:void(0)" data-tippy-content="Meklēt" @click="toggleSearch">
+                    <a href="javascript:void(0)" :data-tippy-content="t('search')" @click="toggleSearch">
                         <i class="material-icons">search</i>
                     </a>
                 </li>
-                <li class="dropdown" data-tippy-content="Show Entries">
+                <li class="dropdown" :data-tippy-content="t('showEntries')">
                     <a href="javascript:void(0)" data-bs-toggle="dropdown">
                         <i class="material-icons">more_vert</i>
                     </a>
@@ -55,13 +64,19 @@
             <slot name="default"></slot>
             <div v-if="advancedSearch" class="toolbar" :class="{ open: searchBarOpen }">
                 <form @submit.prevent="setAdvancedSearchFilters">
-                    <template v-for="(column, index) in columns">
-                        <span v-if="column.searchable !== false" class="bmd-form-group" :key="index">
-                            <input :name="column.name" class="form-control advanced-filter-input"
-                                :placeholder="column.displayName" autocomplete="off" />
+                    <template 
+                        v-for="(column, index) in columns" 
+                        :key="index"
+                    >
+                        <span v-if="column.searchable !== false" class="bmd-form-group">
+                            <input
+                                :name="column.name"
+                                class="form-control advanced-filter-input"
+                                :placeholder="column.displayName" autocomplete="off"
+                            />
                         </span>
                     </template>
-                    <button type="submit" class="btn btn-primary">Meklēt</button>
+                    <button type="submit" class="btn btn-primary">{{ t('search') }}</button>
                 </form>
             </div>
             <div class="table-responsive">
@@ -81,7 +96,7 @@
                                         {{ column.displayName }}
                                     </th>
                                 </template>
-                                <th v-if="actions" class="w-25">Darbības</th>
+                                <th v-if="actions?.length" class="w-25">{{ t('actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,26 +106,50 @@
                                 @click="clickableRows ? $emit('row-click', row) : null"
                             >
                                 <td v-if="selectableRows">
-                                    <input type="checkbox" :value="row.id" v-model="selectedRows">
+                                    <input
+                                        type="checkbox"
+                                        :value="row.id"
+                                        v-model="selectedRows"
+                                        @click.stop
+                                    >
                                 </td>
                                 <template v-for="(column, index) in columns" :key="index">
                                     <td
                                         v-if="column.visible !== false"
                                         :class="getCellClasses(column, row)"
                                     >
-                                        <Link v-if="column.linkParams && hyperlinkStyle === 'Link'" :href="generateLink(column.linkParams, row)"
-                                            v-html="row[column.data]">
+                                        <template v-if="column.render">
+                                            <span  v-html="column.render(row)"></span>
+                                        </template>
+                                        <Link 
+                                            v-else-if="column.link && hyperlinkStyle === 'Link'"
+                                            :href="column.link(row)"
+                                            @click.stop
+                                        >
+                                            {{row[column.data]}}
                                         </Link>
-                                        <a v-else-if="column.linkParams && hyperlinkStyle === 'a'" :href="generateLink(column.linkParams, row)"
-                                            v-html="row[column.data]"></a>
+                                        <a
+                                            v-else-if="column.link && hyperlinkStyle === 'a'"
+                                            :href="column.link(row)"
+                                            @click.stop
+                                        >
+                                            {{row[column.data]}}
+                                        </a>
                                         <template v-else>
-                                            <span v-html="row[column.data]"></span>
+                                            <span>
+                                                {{row[column.data]}}
+                                            </span>
                                         </template>
                                     </td>
                                 </template>
-                                <td v-if="actions">
-                                    <button v-for="(action, index) in actions" :key="index" class="btn btn-sm"
-                                        :class="action.class" @click="handleEmit(action.emit, row)">
+                                <td v-if="actions?.length">
+                                    <button
+                                        v-for="(action, index) in actions"
+                                        :key="index"
+                                        class="btn btn-sm"
+                                        :class="action.class"
+                                        @click.stop="handleEmit(action.emit, row)"
+                                    >
                                         <i v-if="action.icon" class="material-icons">{{ action.icon }}</i> {{
                                             action.label
                                         }}
@@ -121,26 +160,44 @@
                     </table>
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="dataTables_info">
-                            Rāda {{ firstRecord }}. līdz {{ lastRecord }}. no {{ recordsFiltered }} ierakstiem
+                            {{
+                                t('showingRecords', {
+                                    first: firstRecord,
+                                    last: lastRecord,
+                                    filtered: recordsFiltered,
+                                })
+                            }}
                             <span v-if="recordsFiltered != recordsTotal">
-                                (kopā {{ recordsTotal }} ieraksti)
+                                ({{
+                                    t('totalRecords', {
+                                        total: recordsTotal,
+                                    })
+                                }})
                             </span>
                         </div>
                         <div class="dataTables_paginate paging_simple_numbers user-select-none"
                             id="document-index-table_paginate">
-                            <a class="paginate_button first user-select-none" :class="{ disabled: columnSettings.start == 0 }"
-                                @click="setPage(1)">Pirmā</a>
+                            <a 
+                                class="paginate_button first user-select-none" 
+                                :class="{ disabled: columnSettings.start == 0 }"
+                                @click="setPage(1)"
+                            >{{ t('first') }}</a>
                             <a class="paginate_button previous" :class="{ disabled: columnSettings.start == 0 }"
-                                @click="setPage(currentPage - 1)">Iepriekšējā</a>
+                                @click="setPage(currentPage - 1)">{{ t('previous') }}</a>
 
                             <span>
-                                <a v-for="(page, index) in pages" class="paginate_button"
-                                    :class="{ current: page == currentPage }" @click="setPage(page)">{{ page }}</a>
+                                <a 
+                                    v-for="(page, index) in pages"
+                                    :key="index"
+                                    class="paginate_button"
+                                    :class="{ current: page == currentPage }"
+                                    @click="setPage(page)"
+                                >{{ page }}</a>
                             </span>
                             <a class="paginate_button next" :class="{ disabled: columnSettings.start >= lastPageStart }"
-                                @click="setPage(currentPage + 1)">Nākamā</a>
+                                @click="setPage(currentPage + 1)">{{ t('next') }}</a>
                             <a class="paginate_button last" :class="{ disabled: columnSettings.start >= lastPageStart }"
-                                @click="setPage(pageCount)">Pēdējā</a>
+                                @click="setPage(pageCount)">{{ t('last') }}</a>
                         </div>
                     </div>
                 </div>
@@ -152,6 +209,7 @@
 <script>
 import axios from 'axios';
 import { Link } from '@inertiajs/vue3';
+import { defaultVocabulary } from '../locales';
 
 export default {
     name: "DatatableCard",
@@ -159,6 +217,18 @@ export default {
         Link,
     },
     props: {
+        locale: {
+            type: String,
+            required: false,
+            default: 'en',
+        },
+        vocabulary: {
+            type: Object,
+            required: false,
+            default: () => {
+                return {};
+            }
+        },
         cardTitle: {
             type: String,
             required: false,
@@ -200,7 +270,7 @@ export default {
         order: {
             type: Array,
             required: false,
-            default: [
+            default: () => [
                 {
                     column: 0,
                     dir: 'asc',
@@ -256,6 +326,7 @@ export default {
             recordsFiltered: 0,
             selectedRows: [],
             cardError: null,
+            searchTimer: null,
         }
     },
     watch: {
@@ -277,7 +348,9 @@ export default {
     },
     computed: {
         firstRecord() {
-            return this.columnSettings.start + 1;
+            return this.recordsFiltered === 0
+                ? 0
+                : this.columnSettings.start + 1;
         },
         lastRecord() {
             return this.columnSettings.start + this.rows.length;
@@ -420,18 +493,35 @@ export default {
             }
         },
         clearSearch() {
-            this.searchBarOpen = false;
-            this.$el.querySelector('.filter-input').value = '';
-            this.columnSettings.search.value = '';
+            clearTimeout(this.searchTimer);
 
+            this.searchBarOpen = false;
+
+            const input = this.$el.querySelector('.filter-input');
+
+            if (input) {
+                input.value = '';
+            }
+
+            this.columnSettings.search.value = '';
+            this.columnSettings.start = 0;
             this.loadData();
         },
         setAdvancedSearchFilters() {
-            this.columnSettings.columns.forEach((column, index) => {
-                if (column.searchable) {
-                    column.search.value = this.$el.querySelector(`input[name="${column.name}"]`).value;
+            this.columnSettings.start = 0;
+
+            this.columnSettings.columns.forEach(column => {
+                if (!column.searchable) {
+                    return;
                 }
+
+                const input = this.$el.querySelector(
+                    `input[name="${CSS.escape(column.name)}"]`
+                );
+
+                column.search.value = input?.value ?? '';
             });
+
             this.loadData();
         },
         loadData() {
@@ -443,7 +533,7 @@ export default {
             };
             axios.get(this.url, { params: params }).then(response => {
                 if (response.data.error) {
-                    this.cardError = 'error loading data. see console for details';
+                    this.cardError = this.t('loadingError');
                     console.error(response.data.error);
                     return;
                 }
@@ -454,7 +544,10 @@ export default {
                 this.recordsFiltered = response.data.recordsFiltered;
             })
                 .catch(error => {
-                    this.cardError = error.response.data.message;
+                    this.cardError =
+                        error.response?.data?.message ??
+                        this.t('loadingError');
+
                     console.error(error);
                 });
         },
@@ -475,7 +568,7 @@ export default {
                         }
                     }
                 }),
-                order: this.order,
+                order: this.order.map(item => ({ ...item })),
                 start: 0,
                 length: this.pageLength,
                 search: {
@@ -486,6 +579,7 @@ export default {
         },
         setPageLength(length) {
             this.columnSettings.length = length;
+            this.columnSettings.start = 0;
             this.loadData();
         },
         setPage(page) {
@@ -496,16 +590,15 @@ export default {
             this.loadData();
         },
         setSearchTerm() {
-            // wait for user to stop typing
-            setTimeout(() => {
-                this.columnSettings.search.value = this.$el.querySelector('.filter-input').value;
+            clearTimeout(this.searchTimer);
+
+            this.searchTimer = setTimeout(() => {
+                const input = this.$el.querySelector('.filter-input');
+
+                this.columnSettings.search.value =
+                    input?.value ?? '';
+
                 this.columnSettings.start = 0;
-                // set search term for each column if searchable
-                // this.columnSettings.columns.forEach((column, index) => {
-                //     if(column.searchable){
-                //         column.search.value = this.columnSettings.search.value;
-                //     }
-                // });
                 this.loadData();
             }, 500);
         },
@@ -528,66 +621,6 @@ export default {
                 ];
             }
             this.loadData();
-        },
-        /**
-         * Build a link for a cell. Supports either:
-         *  1) Laravel route name (via Ziggy `route()`) — provide `{ name, resourceIds?, query? }`
-         *  2) Link template string — provide `{ template, params?, query? }` OR pass the template directly as a string.
-         *
-         * Notes
-         * - `resourceIds` is an array of row keys (in order) used for `route(name, [...])`.
-         * - `template` supports placeholders like `/users/{id}/posts/{post_id}` or `/users/:id`.
-         * - `params` (optional) lets you override/augment values used to interpolate the template.
-         * - `query` (optional) is appended as a query string for both modes.
-         */
-        generateLink(linkParams, row) {
-            // Helper: append query object as `?a=1&b=2`
-            const appendQuery = (href, query) => {
-                if (!query || typeof query !== 'object') return href;
-                const qs = new URLSearchParams(query).toString();
-                return qs ? `${href}?${qs}` : href;
-            };
-
-            // Helper: interpolate `{key}` and `:key` tokens from row/params
-            const interpolate = (tpl, ctx) => {
-                if (!tpl) return '';
-                // {key}
-                let out = tpl.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] ?? ''));
-                // :key (avoid matching protocol like http://)
-                out = out.replace(/(^|[^:]):(\w+)/g, (m, prefix, k) => `${prefix}${ctx[k] ?? ''}`);
-                return out;
-            };
-
-            // String shorthand => treat as a template
-            if (typeof linkParams === 'string') {
-                const href = interpolate(linkParams, row);
-                return href; // no query in shorthand; use object form if you need query
-            }
-
-            // Safety
-            if (!linkParams || typeof linkParams !== 'object') return '';
-
-            // Template mode
-            if (linkParams.template) {
-                // Merge row first, then allow explicit overrides via params
-                const ctx = { ...(row || {}), ...(linkParams.params || {}) };
-                const href = interpolate(linkParams.template, ctx);
-                return appendQuery(href, linkParams.query);
-            }
-
-            // Route name mode (default/back-compat)
-            if (linkParams.name) {
-                const ids = Array.isArray(linkParams.resourceIds)
-                ? linkParams.resourceIds.map((key) => (row ? row[key] : undefined))
-                : [];
-
-                // `route` comes from Ziggy; assume it is globally available as in your existing codebase
-                let href = route(linkParams.name, ids);
-                return appendQuery(href, linkParams.query);
-            }
-
-            // Nothing to build
-            return '';
         },
         selectAllRows() {
             if (this.selectedRows.length == this.rows.length) {
@@ -625,15 +658,42 @@ export default {
                     });
                 }
             });
-
+            
+            this.columnSettings.start = 0;
             this.loadData();
         },
         getSelectedRows() {
             return this.selectedRows;
         },
+        t(key, replacements = {}) {
+            const packageLocale =
+                defaultVocabulary[this.locale] ??
+                defaultVocabulary.en;
+
+            const customLocale =
+                this.vocabulary[this.locale] ??
+                this.vocabulary.en;
+
+            let translation =
+                customLocale?.[key] ??
+                packageLocale?.[key] ??
+                defaultVocabulary.en[key] ??
+                key;
+
+            Object.entries(replacements).forEach(([name, value]) => {
+                translation = translation.replaceAll(
+                    `{${name}}`,
+                    String(value)
+                );
+            });
+
+            return translation;
+        },
+    },
+    created() {
+        this.initColumnSettings();
     },
     mounted() {
-        this.initColumnSettings();
         if (this.loadDataOnInit) {
             this.loadData();
         }
