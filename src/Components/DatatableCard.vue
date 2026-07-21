@@ -1,6 +1,7 @@
 <template>
     <div class="card" :class="cardClasses">
         <header
+            v-if="showHeader || $slots.header"
             class="card-header"
             :class="[
                 {
