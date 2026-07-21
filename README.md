@@ -101,6 +101,7 @@ export default {
 | `clickableRows` | `Boolean` | `false` | Emits `row-click` when a table row is clicked. |
 | `hyperlinkStyle` | `String` | `'Link'` | Controls column link rendering. Supported values are `'Link'` and `'a'`. |
 | `pageLength` | `Number` | `10` | Initial number of rows per page. |
+| `showHeader` | `Boolean` | `true` | To hide default header controls, set to `false`. |
 
 In templates, camelCase props can be passed using kebab-case, for example `page-length`, `clickable-rows`, and `request-query-params`.
 

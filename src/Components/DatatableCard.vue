@@ -1,6 +1,6 @@
 <template>
     <div class="card" :class="cardClasses">
-        <header 
+        <header
             class="card-header"
             :class="[
                 {
@@ -11,54 +11,58 @@
             ]"
         >
             <slot name="header"></slot>
-            <div v-if="cardIcon" class="card-icon">
-                <i v-if="!cardError" class="material-icons">{{ cardIcon }}</i>
-                <i v-else class="material-icons">dangerous</i>
-            </div>
-            <h4 v-if="cardTitle && !cardError" class="card-title">{{ cardTitle }}</h4>
-            <h4 v-if="cardError" class="card-title text-danger">{{ cardError }}</h4>
-            <div v-if="!advancedSearch" class="card-search" :class="{ open: searchBarOpen }">
-                <div class="form-group label-floating is-empty">
-                    <i class="material-icons search-icon-left">search</i>
-                    <input type="text" class="form-control filter-input" :placeholder="t('search')" autocomplete="off"
-                        @keyup="setSearchTerm">
-                    <a href="javascript:void(0)" class="close-search" @click="clearSearch" :data-tippy-content="t('close')">
-                        <i class="material-icons">close</i>
-                    </a>
+            <template
+                v-if="showHeader"
+            >
+                <div v-if="cardIcon" class="card-icon">
+                    <i v-if="!cardError" class="material-icons">{{ cardIcon }}</i>
+                    <i v-else class="material-icons">dangerous</i>
                 </div>
-            </div>
-            <ul class="card-actions icons right-top">
-                <slot name="actions"></slot>
-                <li v-if="createLink">
-                    <Link :href="createLink" :data-tippy-content="t('createNew')">
-                    <i class="material-icons">add</i>
-                    </Link>
-                </li>
-                <li>
-                    <a href="javascript:void(0)" :data-tippy-content="t('search')" @click="toggleSearch">
-                        <i class="material-icons">search</i>
-                    </a>
-                </li>
-                <li class="dropdown" :data-tippy-content="t('showEntries')">
-                    <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                        <i class="material-icons">more_vert</i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-right">
-                        <li @click="setPageLength(10)">
-                            <a href="javascript:void(0)">10</a>
-                        </li>
-                        <li @click="setPageLength(25)">
-                            <a href="javascript:void(0)">25</a>
-                        </li>
-                        <li @click="setPageLength(50)">
-                            <a href="javascript:void(0)">50</a>
-                        </li>
-                        <li @click="setPageLength(100)">
-                            <a href="javascript:void(0)">100</a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
+                <h4 v-if="cardTitle && !cardError" class="card-title">{{ cardTitle }}</h4>
+                <h4 v-if="cardError" class="card-title text-danger">{{ cardError }}</h4>
+                <div v-if="!advancedSearch" class="card-search" :class="{ open: searchBarOpen }">
+                    <div class="form-group label-floating is-empty">
+                        <i class="material-icons search-icon-left">search</i>
+                        <input type="text" class="form-control filter-input" :placeholder="t('search')" autocomplete="off"
+                            @keyup="setSearchTerm">
+                        <a href="javascript:void(0)" class="close-search" @click="clearSearch" :data-tippy-content="t('close')">
+                            <i class="material-icons">close</i>
+                        </a>
+                    </div>
+                </div>
+                <ul class="card-actions icons right-top">
+                    <slot name="actions"></slot>
+                    <li v-if="createLink">
+                        <Link :href="createLink" :data-tippy-content="t('createNew')">
+                        <i class="material-icons">add</i>
+                        </Link>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" :data-tippy-content="t('search')" @click="toggleSearch">
+                            <i class="material-icons">search</i>
+                        </a>
+                    </li>
+                    <li class="dropdown" :data-tippy-content="t('showEntries')">
+                        <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <i class="material-icons">more_vert</i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <li @click="setPageLength(10)">
+                                <a href="javascript:void(0)">10</a>
+                            </li>
+                            <li @click="setPageLength(25)">
+                                <a href="javascript:void(0)">25</a>
+                            </li>
+                            <li @click="setPageLength(50)">
+                                <a href="javascript:void(0)">50</a>
+                            </li>
+                            <li @click="setPageLength(100)">
+                                <a href="javascript:void(0)">100</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </template>
         </header>
         <div class="card-body">
             <slot name="default"></slot>
@@ -313,6 +317,11 @@ export default {
             type: Number,
             required: false,
             default: 10,
+        },
+        showHeader: {
+            type: Boolean,
+            required: false,
+            default: true,
         },
     },
     emits: ['row-click'],
