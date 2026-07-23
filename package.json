@@ -1,6 +1,6 @@
 {
   "name": "@sulzanoks/vue-datatable",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": false,
   "main": "./src/index.js",
   "module": "./dist/datatable-card.es.js",
@@ -22,13 +22,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@inertiajs/vue3": "^1.0.11",
+    "@inertiajs/vue3": "^3.0.0",
     "axios": "^1.5.0",
-    "vue": "^3.3.4"
+    "vue": "^3.5.13"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.2.3",
+    "@vitejs/plugin-vue": "^6.0.0",
     "sass": "^1.67.0",
-    "vite": "^4.4.5"
+    "vite": "^8.0.0"
   }
 }
