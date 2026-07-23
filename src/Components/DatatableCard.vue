@@ -864,7 +864,7 @@ ul.card-actions.icons li {
 }
 
 .card .card-header {
-    z-index: 3 !important;
+    z-index: 0 !important;
 }
 
 .card [class*=card-header-] {
