@@ -8,13 +8,18 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/index.js'),
       name: 'DatatableCard',
-      fileName: (format) => `datatable-card.${format}.js`
+      fileName: (format) => `datatable-card.${format}.js`,
+      cssFileName: 'style',
     },
     rollupOptions: {
-      external: ['vue'],
+      external: [
+        'vue',
+        '@inertiajs/vue3',
+      ],
       output: {
         globals: {
-          vue: 'Vue'
+          vue: 'Vue',
+          '@inertiajs/vue3': 'InertiaVue3',
         }
       }
     }
