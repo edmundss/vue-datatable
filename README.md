@@ -11,13 +11,79 @@ It supports server-side pagination, sorting, global and per-column search, row s
 - `@inertiajs/vue3`
 - A server endpoint that accepts DataTables-style query parameters and returns a compatible response
 
-The component also uses Bootstrap/Material-style classes and Material Icons in its default markup.
+Load Material Icons for the default toolbar icons and for icon names supplied through component props.
 
 ## Installation
 
 ```bash
 npm install @sulzanoks/vue-datatable
 ```
+
+Import the component and its stylesheet in your app:
+
+```js
+import DatatableCard from '@sulzanoks/vue-datatable';
+import '@sulzanoks/vue-datatable/dist/style.css';
+```
+
+The package supplies its own layout and control styles. The page-size menu is controlled by Vue and offers 10, 25, 50, and 100 rows. It highlights the current size, closes on selection, outside click, or Escape, and returns to the first page when the size changes.
+
+## Local development
+
+From the package repository:
+
+```sh
+npm install
+npm link
+npm run build -- --watch
+```
+
+From the consuming app:
+
+```sh
+npm link @sulzanoks/vue-datatable
+npm run dev
+```
+
+The linked app imports the package's `dist` files. The watch build updates those files as you edit package source.
+
+## Theming
+
+Import the package stylesheet for the default layout. The datatable inherits your application's color scheme. Set CSS custom properties on an ancestor to theme a group of tables, or on the component to theme one instance:
+
+```css
+.admin-tables {
+    --vdt-surface: light-dark(#fff, #202124);
+    --vdt-text: light-dark(#222, #f1f3f4);
+    --vdt-accent: #7e22ce;
+    --vdt-accent-text: #fff;
+}
+```
+
+| Variables | Purpose |
+| --- | --- |
+| `--vdt-surface`, `--vdt-text`, `--vdt-muted-text`, `--vdt-border` | Default table and card palette |
+| `--vdt-accent`, `--vdt-accent-text`, `--vdt-link`, `--vdt-focus`, `--vdt-hover-surface` | Interactive states |
+| `--vdt-search-surface`, `--vdt-search-text` | Search toolbar palette |
+| `--vdt-menu-surface`, `--vdt-menu-text` | Page-size menu palette |
+| `--vdt-icon-surface`, `--vdt-error-text`, `--vdt-error-surface` | Header icon and error colors |
+| `--vdt-radius`, `--vdt-shadow`, `--vdt-padding`, `--vdt-cell-padding`, `--vdt-margin-block`, `--vdt-font-size` | Card shape and spacing |
+
+For a Bootstrap 6 app, map the package variables in the host stylesheet:
+
+```css
+:root {
+    --vdt-surface: var(--bg-2);
+    --vdt-text: var(--fg-body);
+    --vdt-muted-text: var(--fg-2);
+    --vdt-border: var(--border-color-translucent);
+    --vdt-search-surface: var(--bg-1);
+}
+```
+
+In apps without a theme, set `color-scheme: light dark` on the page root to follow the operating system. CSS custom properties can also be set on a single datatable through its `style` attribute.
+
+Use the existing `header` and `actions` slots when you need custom markup. Classes passed through props, such as an action's `class`, are applied as supplied.
 
 ## Basic usage
 
@@ -265,7 +331,7 @@ export default {
 | `search` | Search placeholder, search button, and tooltip |
 | `close` | Close-search tooltip |
 | `createNew` | Create-link tooltip |
-| `showEntries` | Page-length menu tooltip |
+| `showEntries` | Page-size menu label and tooltip |
 | `actions` | Row actions column heading |
 | `showingRecords` | Record-range text; supports `{first}`, `{last}`, and `{filtered}` |
 | `totalRecords` | Unfiltered total; supports `{total}` |

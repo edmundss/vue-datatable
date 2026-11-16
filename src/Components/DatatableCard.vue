@@ -1,12 +1,12 @@
 <template>
-    <div class="card" :class="cardClasses">
+    <div class="vue-datatable" :class="cardClasses">
         <header
             v-if="showHeader || $slots.header"
-            class="card-header"
+            class="vdt-header"
             :class="[
                 {
-                    'card-header-danger': cardError && cardIcon,
-                    'card-header-icon': cardIcon 
+                    'vdt-header-error': cardError,
+                    'vdt-header-menu-open': showPageDropdown 
                 },
                 !cardError && cardIcon ? cardIconStyle : null,
             ]"
@@ -15,23 +15,23 @@
             <template
                 v-if="showHeader"
             >
-                <div v-if="cardIcon" class="card-icon">
+                <div v-if="cardIcon" class="vdt-header-icon">
                     <i v-if="!cardError" class="material-icons">{{ cardIcon }}</i>
                     <i v-else class="material-icons">dangerous</i>
                 </div>
-                <h4 v-if="cardTitle && !cardError" class="card-title">{{ cardTitle }}</h4>
-                <h4 v-if="cardError" class="card-title text-danger">{{ cardError }}</h4>
-                <div v-if="!advancedSearch" class="card-search" :class="{ open: searchBarOpen }">
-                    <div class="form-group label-floating is-empty">
-                        <i class="material-icons search-icon-left">search</i>
-                        <input type="text" class="form-control filter-input" :placeholder="t('search')" autocomplete="off"
+                <h4 v-if="cardTitle && !cardError" class="vdt-title">{{ cardTitle }}</h4>
+                <h4 v-if="cardError" class="vdt-title vdt-title-error">{{ cardError }}</h4>
+                <div v-if="!advancedSearch" class="vdt-search" :class="{ open: searchBarOpen }">
+                    <div class="vdt-search-field">
+                        <i class="material-icons vdt-search-icon" aria-hidden="true">search</i>
+                        <input type="text" class="vdt-input filter-input" :aria-label="t('search')" :placeholder="t('search')" autocomplete="off"
                             @keyup="setSearchTerm">
-                        <a href="javascript:void(0)" class="close-search" @click="clearSearch" :data-tippy-content="t('close')">
+                        <a href="javascript:void(0)" class="vdt-search-close" :aria-label="t('close')" @click="clearSearch" :data-tippy-content="t('close')">
                             <i class="material-icons">close</i>
                         </a>
                     </div>
                 </div>
-                <ul class="card-actions icons right-top">
+                <ul class="vdt-actions">
                     <slot name="actions"></slot>
                     <li v-if="createLink">
                         <Link :href="createLink" :data-tippy-content="t('createNew')">
@@ -43,168 +43,173 @@
                             <i class="material-icons">search</i>
                         </a>
                     </li>
-                    <li class="dropdown" :data-tippy-content="t('showEntries')">
-                        <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                            <i class="material-icons">more_vert</i>
+                    <li
+                        ref="pageDropdown"
+                        class="vdt-page-dropdown"
+                        :data-tippy-content="t('showEntries')"
+                        @keydown.esc.stop="closePageDropdown"
+                    >
+                        <a
+                            ref="pageDropdownToggle"
+                            href="#"
+                            role="button"
+                            :aria-label="t('showEntries')"
+                            :aria-expanded="showPageDropdown"
+                            @click.prevent="showPageDropdown = !showPageDropdown"
+                            @keydown.space.prevent="showPageDropdown = !showPageDropdown"
+                        >
+                            <i class="material-icons" aria-hidden="true">more_vert</i>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-right">
-                            <li @click="setPageLength(10)">
-                                <a href="javascript:void(0)">10</a>
-                            </li>
-                            <li @click="setPageLength(25)">
-                                <a href="javascript:void(0)">25</a>
-                            </li>
-                            <li @click="setPageLength(50)">
-                                <a href="javascript:void(0)">50</a>
-                            </li>
-                            <li @click="setPageLength(100)">
-                                <a href="javascript:void(0)">100</a>
+                        <ul v-if="showPageDropdown" class="vdt-page-menu">
+                            <li v-for="length in [10, 25, 50, 100]" :key="length">
+                                <a
+                                    href="#"
+                                    :aria-current="columnSettings.length === length ? 'true' : undefined"
+                                    @click.prevent="setPageLength(length)"
+                                >{{ length }}</a>
                             </li>
                         </ul>
                     </li>
                 </ul>
             </template>
         </header>
-        <div class="card-body">
+        <div class="vdt-body">
             <slot name="default"></slot>
-            <div v-if="advancedSearch" class="toolbar" :class="{ open: searchBarOpen }">
+            <div v-if="advancedSearch" class="vdt-toolbar" :class="{ open: searchBarOpen }">
                 <form @submit.prevent="setAdvancedSearchFilters">
                     <template 
                         v-for="(column, index) in columns" 
                         :key="index"
                     >
-                        <span v-if="column.searchable !== false" class="bmd-form-group">
+                        <span v-if="column.searchable !== false" class="vdt-filter">
                             <input
                                 :name="column.name"
-                                class="form-control advanced-filter-input"
+                                class="vdt-input advanced-filter-input"
+                                :aria-label="column.displayName"
                                 :placeholder="column.displayName" autocomplete="off"
                             />
                         </span>
                     </template>
-                    <button type="submit" class="btn btn-primary">{{ t('search') }}</button>
+                    <button type="submit" class="vdt-button vdt-button-accent">{{ t('search') }}</button>
                 </form>
             </div>
-            <div class="table-responsive">
-                <div class="dataTables_wrapper no-footer">
-                    <table class="table data-table dataTable no-footer" :class="{'table-hover' : clickableRows}">
-                        <thead>
-                            <tr>
-                                <th v-if="selectableRows">
-                                    <input type="checkbox" @click="selectAllRows" ref="selectAllRows">
+            <div class="vdt-table-scroll">
+                <table class="vdt-table" :class="{ 'vdt-table-clickable': clickableRows }">
+                    <thead>
+                        <tr>
+                            <th v-if="selectableRows">
+                                <input type="checkbox" @click="selectAllRows" ref="selectAllRows">
+                            </th>
+                            <template v-for="(column, index) in columns" :key="index">
+                                <th v-if="column.visible !== false"
+                                    :class="[columnSortingClasses[index], column.sortable !== false ? 'vdt-sortable' : '']"
+                                    @click="setSorting(index)"
+                                    :style="column.width ? { width: column.width } : {}"
+                                >
+                                    {{ column.displayName }}
                                 </th>
-                                <template v-for="(column, index) in columns" :key="index">
-                                    <th v-if="column.visible !== false"
-                                        :class="[columnSortingClasses[index], column.sortable !== false ? 'sorting' : '']"
-                                        @click="setSorting(index)"
-                                        :style="column.width ? { width: column.width } : {}"
-                                    >
-                                        {{ column.displayName }}
-                                    </th>
-                                </template>
-                                <th v-if="actions?.length" class="w-25">{{ t('actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="(row, index) in rows"
-                                :key="index"
-                                @click="clickableRows ? $emit('row-click', row) : null"
-                            >
-                                <td v-if="selectableRows">
-                                    <input
-                                        type="checkbox"
-                                        :value="row.id"
-                                        v-model="selectedRows"
+                            </template>
+                            <th v-if="actions?.length" class="vdt-actions-column">{{ t('actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="(row, index) in rows"
+                            :key="index"
+                            @click="clickableRows ? $emit('row-click', row) : null"
+                        >
+                            <td v-if="selectableRows">
+                                <input
+                                    type="checkbox"
+                                    :value="row.id"
+                                    v-model="selectedRows"
+                                    @click.stop
+                                >
+                            </td>
+                            <template v-for="(column, index) in columns" :key="index">
+                                <td
+                                    v-if="column.visible !== false"
+                                    :class="getCellClasses(column, row)"
+                                >
+                                    <template v-if="column.render">
+                                        <span  v-html="column.render(row)"></span>
+                                    </template>
+                                    <Link 
+                                        v-else-if="column.link && hyperlinkStyle === 'Link'"
+                                        :href="column.link(row)"
                                         @click.stop
                                     >
-                                </td>
-                                <template v-for="(column, index) in columns" :key="index">
-                                    <td
-                                        v-if="column.visible !== false"
-                                        :class="getCellClasses(column, row)"
+                                        {{row[column.data]}}
+                                    </Link>
+                                    <a
+                                        v-else-if="column.link && hyperlinkStyle === 'a'"
+                                        :href="column.link(row)"
+                                        @click.stop
                                     >
-                                        <template v-if="column.render">
-                                            <span  v-html="column.render(row)"></span>
-                                        </template>
-                                        <Link 
-                                            v-else-if="column.link && hyperlinkStyle === 'Link'"
-                                            :href="column.link(row)"
-                                            @click.stop
-                                        >
+                                        {{row[column.data]}}
+                                    </a>
+                                    <template v-else>
+                                        <span>
                                             {{row[column.data]}}
-                                        </Link>
-                                        <a
-                                            v-else-if="column.link && hyperlinkStyle === 'a'"
-                                            :href="column.link(row)"
-                                            @click.stop
-                                        >
-                                            {{row[column.data]}}
-                                        </a>
-                                        <template v-else>
-                                            <span>
-                                                {{row[column.data]}}
-                                            </span>
-                                        </template>
-                                    </td>
-                                </template>
-                                <td v-if="actions?.length">
-                                    <button
-                                        v-for="(action, index) in actions"
-                                        :key="index"
-                                        class="btn btn-sm"
-                                        :class="action.class"
-                                        @click.stop="handleEmit(action.emit, row)"
-                                    >
-                                        <i v-if="action.icon" class="material-icons">{{ action.icon }}</i> {{
-                                            action.label
-                                        }}
-                                    </button>
+                                        </span>
+                                    </template>
                                 </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="dataTables_info">
-                            {{
-                                t('showingRecords', {
-                                    first: firstRecord,
-                                    last: lastRecord,
-                                    filtered: recordsFiltered,
-                                })
-                            }}
-                            <span v-if="recordsFiltered != recordsTotal">
-                                ({{
-                                    t('totalRecords', {
-                                        total: recordsTotal,
-                                    })
-                                }})
-                            </span>
-                        </div>
-                        <div class="dataTables_paginate paging_simple_numbers user-select-none"
-                            id="document-index-table_paginate">
-                            <a 
-                                class="paginate_button first user-select-none" 
-                                :class="{ disabled: columnSettings.start == 0 }"
-                                @click="setPage(1)"
-                            >{{ t('first') }}</a>
-                            <a class="paginate_button previous" :class="{ disabled: columnSettings.start == 0 }"
-                                @click="setPage(currentPage - 1)">{{ t('previous') }}</a>
-
-                            <span>
-                                <a 
-                                    v-for="(page, index) in pages"
+                            </template>
+                            <td v-if="actions?.length">
+                                <button
+                                    v-for="(action, index) in actions"
                                     :key="index"
-                                    class="paginate_button"
-                                    :class="{ current: page == currentPage }"
-                                    @click="setPage(page)"
-                                >{{ page }}</a>
-                            </span>
-                            <a class="paginate_button next" :class="{ disabled: columnSettings.start >= lastPageStart }"
-                                @click="setPage(currentPage + 1)">{{ t('next') }}</a>
-                            <a class="paginate_button last" :class="{ disabled: columnSettings.start >= lastPageStart }"
-                                @click="setPage(pageCount)">{{ t('last') }}</a>
-                        </div>
-                    </div>
+                                    type="button"
+                                    class="vdt-button"
+                                    :class="action.class"
+                                    @click.stop="handleEmit(action.emit, row)"
+                                >
+                                    <i v-if="action.icon" class="material-icons">{{ action.icon }}</i> {{
+                                        action.label
+                                    }}
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="vdt-footer">
+                <div class="vdt-info">
+                    {{
+                        t('showingRecords', {
+                            first: firstRecord,
+                            last: lastRecord,
+                            filtered: recordsFiltered,
+                        })
+                    }}
+                    <span v-if="recordsFiltered != recordsTotal">
+                        ({{
+                            t('totalRecords', {
+                                total: recordsTotal,
+                            })
+                        }})
+                    </span>
+                </div>
+                <div class="vdt-pagination">
+                    <button type="button" :disabled="currentPage <= 1" @click="setPage(1)">
+                        {{ t('first') }}
+                    </button>
+                    <button type="button" :disabled="currentPage <= 1" @click="setPage(currentPage - 1)">
+                        {{ t('previous') }}
+                    </button>
+                    <button
+                        v-for="page in pages"
+                        :key="page"
+                        type="button"
+                        :aria-current="page === currentPage ? 'page' : undefined"
+                        @click="setPage(page)"
+                    >{{ page }}</button>
+                    <button type="button" :disabled="currentPage >= pageCount" @click="setPage(currentPage + 1)">
+                        {{ t('next') }}
+                    </button>
+                    <button type="button" :disabled="currentPage >= pageCount" @click="setPage(pageCount)">
+                        {{ t('last') }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -329,6 +334,7 @@ export default {
     data() {
         return {
             searchBarOpen: false,
+            showPageDropdown: false,
             rows: [],
             columnSettings: {},
             searchTerm: '',
@@ -384,7 +390,7 @@ export default {
                 let sortDirection = '';
                 for (let j = 0; j < this.columnSettings.order.length; j++) {
                     if (this.columnSettings.order[j].column == i) {
-                        sortDirection = this.columnSettings.order[j].dir == 'asc' ? 'sorting_asc' : 'sorting_desc';
+                        sortDirection = this.columnSettings.order[j].dir == 'asc' ? 'vdt-sort-ascending' : 'vdt-sort-descending';
                     }
                 }
                 classes.push(sortDirection);
@@ -587,7 +593,21 @@ export default {
                 },
             }
         },
+        closePageDropdown() {
+            if (!this.showPageDropdown) {
+                return;
+            }
+
+            this.showPageDropdown = false;
+            this.$refs.pageDropdownToggle?.focus();
+        },
+        handlePageDropdownOutsideClick(event) {
+            if (this.showPageDropdown && !this.$refs.pageDropdown?.contains(event.target)) {
+                this.showPageDropdown = false;
+            }
+        },
         setPageLength(length) {
+            this.closePageDropdown();
             this.columnSettings.length = length;
             this.columnSettings.start = 0;
             this.loadData();
@@ -704,325 +724,321 @@ export default {
         this.initColumnSettings();
     },
     mounted() {
+        document.addEventListener('click', this.handlePageDropdownOutsideClick);
         if (this.loadDataOnInit) {
             this.loadData();
         }
-    }
-
+    },
+    beforeUnmount() {
+        document.removeEventListener('click', this.handlePageDropdownOutsideClick);
+    },
 }
 </script>
 
 <style scoped>
-.toolbar:not(.open) {
-    display: none;
-}
-
-.card .card-heading {
-    padding: 15px 20px;
+.vue-datatable {
     position: relative;
-    height: 65px;
+    isolation: isolate;
+    inline-size: 100%;
+    min-inline-size: 0;
+    margin-block: var(--vdt-margin-block, 1.875rem);
+    border: 1px solid var(--vdt-border, color-mix(in srgb, CanvasText 18%, transparent));
+    border-radius: var(--vdt-radius, 0.375rem);
+    background: var(--vdt-surface, Canvas);
+    color: var(--vdt-text, CanvasText);
+    box-shadow: var(--vdt-shadow, 0 1px 4px rgb(0 0 0 / 15%));
+    font-size: var(--vdt-font-size, 0.875rem);
+    text-align: start;
 }
 
-.card .card-search {
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    z-index: 15;
-    -webkit-transition: all 0.2s;
-    -o-transition: all 0.2s;
-    transition: all 0.2s;
-    border: 0;
-    box-shadow: none;
-    width: 100%;
-    display: none;
-    background: #fff;
-}
-
-.card .card-search .form-group {
-    margin: 0;
-    padding: 0;
-    height: 65px;
-}
-
-.card .card-search .search-icon-left {
-    left: 15px;
-    right: auto;
-}
-
-.card .card-search .close-search,
-.card .card-search .search-icon-left {
-    top: 50%;
-    margin-top: -15px;
-    line-height: 30px;
-    margin-right: 10px;
-    font-size: 25px;
-    position: absolute;
-    right: 15px;
-    z-index: 99;
-}
-
-.card .card-search .form-control {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    border: none;
-    box-shadow: none;
-    left: 0;
-    top: 0;
-    margin: 0;
-    font-size: 15px;
-    text-indent: 45px;
-    background-color: #EEF5F9;
-    background-image: none;
-}
-
-.card .card-search .close-search {
-    right: 15px;
-    left: auto;
-}
-
-.card .card-search .search-icon-left {
-    top: 50%;
-    margin-top: -15px;
-    line-height: 30px;
-    margin-right: 10px;
-    font-size: 25px;
-    position: absolute;
-    right: 15px;
-    z-index: 99;
-    width: 30px;
-}
-
-.card .card-search.open {
-    display: block;
-}
-
-ul.card-actions.icons.right-top {
-    right: 10px;
-    top: 15px;
-}
-
-.card-heading ul.card-actions.icons {
-    position: absolute;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-ul.card-actions.icons li {
-    display: inline;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    background: unset;
-    background-color: #00bcd4;
-    border-color: #00bcd4;
-    box-shadow: 0 4px 5px 0 rgba(0, 188, 212, 0.14), 0 1px 10px 0 rgba(0, 188, 212, 0.12), 0 2px 4px -1px rgba(0, 188, 212, 0.2);
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button,
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: unset;
-    border: 0;
-    border-color: #00bcd4;
-    border-radius: 30px !important;
-    -webkit-transition: all .3s;
-    transition: all .3s;
-    padding: 0px 11px;
-    margin: 0 3px;
-    min-width: 30px;
-    height: 30px;
-    line-height: 30px;
-    color: #999999 !important;
-    font-weight: 400;
-    font-size: 12px;
-    text-transform: uppercase;
-    background: transparent;
-    text-align: center;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    border: 1;
-}
-
-.card-header:first-child {
-    border-radius: calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0;
-}
-
-.card .card-header {
-    border-bottom: none;
-    background: transparent;
-}
-
-.card [class*=card-header-],
-.card[class*=bg-] {
-    color: #ffffff;
-}
-
-.card .card-header {
-    z-index: 0 !important;
-}
-
-.card [class*=card-header-] {
-    margin: 0px 15px 0;
-    padding: 0;
+.vdt-header {
     position: relative;
-}
-
-.card [class*=card-header-] .card-icon,
-.card [class*=card-header-] .card-text {
-    border-radius: 3px;
-    background-color: #999999;
-    padding: 15px;
-    margin-top: -20px;
-    margin-right: 15px;
-    float: left;
-}
-
-.card .card-header.card-header-icon i,
-.card .card-header.card-header-text i {
-    width: 33px;
-    height: 33px;
-    text-align: center;
-    line-height: 33px;
-}
-
-.card {
-    border: 0;
-    margin-bottom: 30px;
-    margin-top: 30px;
-    border-radius: 6px;
-    color: #333333;
-    background: #ffffff;
-    width: 100%;
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
-    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.14);
-    font-size: 0.875rem;
-}
-
-.card .card-header.card-header-icon .card-title,
-.card .card-header.card-header-text .card-title {
-    margin-top: 15px;
-    color: #3C4858;
-}
-
-.card .card-header.card-header-icon h4,
-.card .card-header.card-header-text h4 {
-    font-weight: 300;
-}
-
-.card .card-header .card-title {
-    margin-bottom: 3px;
-}
-
-.card .card-actions {
-    position: absolute;
-    z-index: 1;
-    top: -50px;
-    width: calc(100% - 30px);
-    left: 17px;
-    right: 17px;
-    text-align: center;
-}
-
-.card .card-actions {
-    text-align: end;
-}
-
-.card ul.card-actions.icons {
-    position: absolute;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    right: 10px;
-    top: 15px;
-}
-
-ul.card-actions.icons.right-top {
-    right: 10px;
-    top: 15px;
-}
-
-ul.card-actions.icons li {
-    display: inline;
-    width: 100%;
-    text-align: unset;
-}
-
-ul.card-actions.icons li {
-    display: inline;
-    width: 100%;
-    text-align: unset;
-}
-
-.dropdown-menu .dropdown-item,
-.dropdown-menu li>a {
-    position: relative;
-    width: auto;
     display: flex;
-    flex-flow: nowrap;
+    flex-wrap: wrap;
     align-items: center;
-    color: #333;
-    font-weight: normal;
-    text-decoration: none;
-    font-size: 0.8125rem;
-    border-radius: 0.125rem;
-    margin: 0 0.3125rem;
-    transition: all 150ms linear;
-    min-width: 7rem;
-    padding: 0.625rem 1.25rem;
-    overflow: hidden;
-    line-height: 1.42857143;
-    text-overflow: ellipsis;
-    word-wrap: break-word;
+    gap: 0.75rem;
+    min-block-size: 4rem;
+    padding: var(--vdt-padding, 1rem);
 }
 
-.dropdown-menu .dropdown-item,
-.dropdown-menu li>a {
-    padding-right: 1.5rem;
-    padding-left: 1.5rem;
+.vdt-header-menu-open {
+    z-index: 2;
 }
 
-.dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1000;
-    display: none;
-    float: left;
-    min-width: 10rem;
-    padding: 0.5rem 0;
-    margin: 0.125rem 0 0;
-    font-size: 1rem;
-    color: #212529;
-    text-align: left;
+.vdt-header-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 3.75rem;
+    block-size: 3.75rem;
+    margin-block-start: -2.5rem;
+    border-radius: var(--vdt-radius, 0.375rem);
+    background: var(--vdt-icon-surface, var(--vdt-accent, #9c27b0));
+    color: var(--vdt-accent-text, #fff);
+}
+
+.vdt-header-error .vdt-header-icon {
+    background: var(--vdt-error-surface, #b42318);
+}
+
+.vdt-title {
+    margin: 0;
+    color: inherit;
+    font-size: 1.125rem;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.vdt-title-error {
+    color: var(--vdt-error-text, light-dark(#b42318, #ffb4ab));
+}
+
+.vdt-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0;
+    margin: 0;
+    margin-inline-start: auto;
     list-style: none;
-    background-color: #ffffff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 0.25rem;
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
 }
 
-.dropdown-menu {
-    border: 0;
+.vdt-actions > li > a,
+.vdt-search-close {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 2rem;
+    min-block-size: 2rem;
+    border-radius: var(--vdt-radius, 0.375rem);
+    color: var(--vdt-link, LinkText);
+    text-decoration: none;
+}
+
+.vdt-actions > li > a:hover,
+.vdt-search-close:hover {
+    background: var(--vdt-hover-surface, color-mix(in srgb, currentColor 12%, transparent));
+}
+
+.vdt-search {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
     display: none;
-    padding: 0.3125rem 0;
-    transform: scale(0);
-    transform-origin: 0 0;
-    will-change: transform, opacity;
-    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+    padding: 0.5rem var(--vdt-padding, 1rem);
+    border-radius: var(--vdt-radius, 0.375rem);
+    background: var(--vdt-search-surface, var(--vdt-surface, Canvas));
+    color: var(--vdt-search-text, var(--vdt-text, CanvasText));
 }
 
-.dropdown-menu {
-    margin: 0 !important;
+.vdt-search.open,
+.vdt-search-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.clickable-rows tbody tr {
+.vdt-search-field {
+    inline-size: 100%;
+}
+
+.vdt-search-icon,
+.vdt-search-close {
+    flex: none;
+}
+
+.vdt-input {
+    min-inline-size: 0;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--vdt-border, color-mix(in srgb, CanvasText 18%, transparent));
+    border-radius: var(--vdt-radius, 0.375rem);
+    background: var(--vdt-surface, Canvas);
+    color: var(--vdt-text, CanvasText);
+    font: inherit;
+}
+
+.vdt-input::placeholder {
+    color: var(--vdt-muted-text, GrayText);
+}
+
+.vdt-search .vdt-input {
+    flex: 1;
+    background: transparent;
+    color: inherit;
+}
+
+.vdt-body {
+    padding: 0 var(--vdt-padding, 1rem) var(--vdt-padding, 1rem);
+}
+
+.vdt-toolbar {
+    margin-block-end: 0.75rem;
+}
+
+.vdt-toolbar:not(.open) {
+    display: none;
+}
+
+.vdt-toolbar form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.vdt-filter,
+.vdt-filter .vdt-input {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+}
+
+.vdt-table-scroll {
+    overflow-x: auto;
+}
+
+.vdt-table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    color: inherit;
+}
+
+.vdt-table :is(th, td) {
+    padding: var(--vdt-cell-padding, 0.625rem 0.5rem);
+    border-block-end: 1px solid var(--vdt-border, color-mix(in srgb, CanvasText 18%, transparent));
+    text-align: inherit;
+    vertical-align: middle;
+}
+
+.vdt-table th {
+    font-weight: 600;
+}
+
+.vdt-table .vdt-sortable {
     cursor: pointer;
+}
+
+.vdt-sortable::after {
+    content: '↕';
+    margin-inline-start: 0.375rem;
+    color: var(--vdt-muted-text, GrayText);
+}
+
+.vdt-sortable.vdt-sort-ascending::after { content: '↑'; }
+.vdt-sortable.vdt-sort-descending::after { content: '↓'; }
+
+.vdt-table-clickable tbody tr {
+    cursor: pointer;
+}
+
+.vdt-table-clickable tbody tr:hover {
+    background: var(--vdt-hover-surface, color-mix(in srgb, currentColor 8%, transparent));
+}
+
+.vdt-table a {
+    color: var(--vdt-link, LinkText);
+}
+
+.vdt-actions-column {
+    inline-size: 25%;
+}
+
+.vdt-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.625rem;
+    margin-block-start: 0.75rem;
+}
+
+.vdt-info {
+    color: var(--vdt-muted-text, GrayText);
+}
+
+.vdt-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.vdt-button,
+.vdt-pagination button {
+    min-block-size: 2rem;
+    padding: 0.25rem 0.625rem;
+    border: 0;
+    border-radius: var(--vdt-radius, 0.375rem);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.vdt-button {
+    border: 1px solid var(--vdt-border, color-mix(in srgb, CanvasText 18%, transparent));
+}
+
+.vdt-pagination button {
+    min-inline-size: 2rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.vdt-pagination button:disabled {
+    color: var(--vdt-muted-text, GrayText);
+    cursor: default;
+    opacity: 0.65;
+}
+
+.vdt-pagination button:hover:not(:disabled),
+.vdt-button:hover:not(:disabled) {
+    background: var(--vdt-hover-surface, color-mix(in srgb, currentColor 12%, transparent));
+}
+
+.vdt-button-accent,
+.vdt-button-accent:hover:not(:disabled),
+.vdt-pagination button[aria-current="page"],
+.vdt-pagination button[aria-current="page"]:hover {
+    background: var(--vdt-accent, #9c27b0);
+    color: var(--vdt-accent-text, #fff);
+}
+
+.vdt-page-dropdown {
+    position: relative;
+}
+
+.vdt-page-menu {
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-end: 0;
+    min-inline-size: 10rem;
+    padding: 0.3125rem;
+    margin: 0;
+    border: 1px solid var(--vdt-border, color-mix(in srgb, CanvasText 18%, transparent));
+    border-radius: var(--vdt-radius, 0.375rem);
+    background: var(--vdt-menu-surface, var(--vdt-surface, Canvas));
+    color: var(--vdt-menu-text, var(--vdt-text, CanvasText));
+    box-shadow: var(--vdt-shadow, 0 1px 4px rgb(0 0 0 / 15%));
+    list-style: none;
+}
+
+.vdt-page-menu a {
+    display: block;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--vdt-radius, 0.375rem);
+    color: inherit;
+    text-decoration: none;
+}
+
+.vdt-page-menu a:hover,
+.vdt-page-menu a:focus-visible,
+.vdt-page-menu a[aria-current="true"] {
+    background: var(--datatable-page-option-active-bg, var(--vdt-accent, #9c27b0));
+    color: var(--datatable-page-option-active-color, var(--vdt-accent-text, #fff));
+}
+
+.vue-datatable :is(a, button, input):focus-visible {
+    outline: 2px solid var(--vdt-focus, Highlight);
+    outline-offset: 2px;
 }
 </style>
